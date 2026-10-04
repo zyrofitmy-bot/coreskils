@@ -10,33 +10,266 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CreatorApplicationRouteImport } from './routes/creator-application'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as CoursesIndexRouteImport } from './routes/courses/index'
+import { Route as CoursesCourseIdRouteImport } from './routes/courses/$courseId'
+import { Route as CreatorsIndexRouteImport } from './routes/creators/index'
+import { Route as CreatorsUsernameRouteImport } from './routes/creators/$username'
+import { Route as ProductsIndexRouteImport } from './routes/products/index'
+import { Route as ProductsProductIdRouteImport } from './routes/products/$productId'
+import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated/dashboard/admin'
+import { Route as AuthenticatedDashboardCreatorRouteImport } from './routes/_authenticated/dashboard/creator'
+import { Route as AuthenticatedDashboardStudentRouteImport } from './routes/_authenticated/dashboard/student'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreatorApplicationRoute = CreatorApplicationRouteImport.update({
+  id: '/creator-application',
+  path: '/creator-application',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundPolicyRoute = RefundPolicyRouteImport.update({
+  id: '/refund-policy',
+  path: '/refund-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesIndexRoute = CoursesIndexRouteImport.update({
+  id: '/courses/',
+  path: '/courses/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesCourseIdRoute = CoursesCourseIdRouteImport.update({
+  id: '/courses/$courseId',
+  path: '/courses/$courseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreatorsIndexRoute = CreatorsIndexRouteImport.update({
+  id: '/creators/',
+  path: '/creators/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreatorsUsernameRoute = CreatorsUsernameRouteImport.update({
+  id: '/creators/$username',
+  path: '/creators/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsIndexRoute = ProductsIndexRouteImport.update({
+  id: '/products/',
+  path: '/products/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
+  id: '/products/$productId',
+  path: '/products/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedDashboardAdminRoute =
+  AuthenticatedDashboardAdminRouteImport.update({
+    id: '/dashboard/admin',
+    path: '/dashboard/admin',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDashboardCreatorRoute =
+  AuthenticatedDashboardCreatorRouteImport.update({
+    id: '/dashboard/creator',
+    path: '/dashboard/creator',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDashboardStudentRoute =
+  AuthenticatedDashboardStudentRouteImport.update({
+    id: '/dashboard/student',
+    path: '/dashboard/student',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/auth': typeof AuthRoute
+  '/contact': typeof ContactRoute
+  '/creator-application': typeof CreatorApplicationRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund-policy': typeof RefundPolicyRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
+  '/courses/$courseId': typeof CoursesCourseIdRoute
+  '/creators/$username': typeof CreatorsUsernameRoute
+  '/products/$productId': typeof ProductsProductIdRoute
+  '/courses/': typeof CoursesIndexRoute
+  '/creators/': typeof CreatorsIndexRoute
+  '/products/': typeof ProductsIndexRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/dashboard/creator': typeof AuthenticatedDashboardCreatorRoute
+  '/dashboard/student': typeof AuthenticatedDashboardStudentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/auth': typeof AuthRoute
+  '/contact': typeof ContactRoute
+  '/creator-application': typeof CreatorApplicationRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund-policy': typeof RefundPolicyRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
+  '/courses/$courseId': typeof CoursesCourseIdRoute
+  '/creators/$username': typeof CreatorsUsernameRoute
+  '/products/$productId': typeof ProductsProductIdRoute
+  '/courses': typeof CoursesIndexRoute
+  '/creators': typeof CreatorsIndexRoute
+  '/products': typeof ProductsIndexRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/dashboard/creator': typeof AuthenticatedDashboardCreatorRoute
+  '/dashboard/student': typeof AuthenticatedDashboardStudentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/about': typeof AboutRoute
+  '/auth': typeof AuthRoute
+  '/contact': typeof ContactRoute
+  '/creator-application': typeof CreatorApplicationRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund-policy': typeof RefundPolicyRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
+  '/courses/$courseId': typeof CoursesCourseIdRoute
+  '/creators/$username': typeof CreatorsUsernameRoute
+  '/products/$productId': typeof ProductsProductIdRoute
+  '/courses/': typeof CoursesIndexRoute
+  '/creators/': typeof CreatorsIndexRoute
+  '/products/': typeof ProductsIndexRoute
+  '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/_authenticated/dashboard/creator': typeof AuthenticatedDashboardCreatorRoute
+  '/_authenticated/dashboard/student': typeof AuthenticatedDashboardStudentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/auth'
+    | '/contact'
+    | '/creator-application'
+    | '/privacy'
+    | '/refund-policy'
+    | '/reset-password'
+    | '/terms'
+    | '/courses/$courseId'
+    | '/creators/$username'
+    | '/products/$productId'
+    | '/courses/'
+    | '/creators/'
+    | '/products/'
+    | '/dashboard/admin'
+    | '/dashboard/creator'
+    | '/dashboard/student'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/about'
+    | '/auth'
+    | '/contact'
+    | '/creator-application'
+    | '/privacy'
+    | '/refund-policy'
+    | '/reset-password'
+    | '/terms'
+    | '/courses/$courseId'
+    | '/creators/$username'
+    | '/products/$productId'
+    | '/courses'
+    | '/creators'
+    | '/products'
+    | '/dashboard/admin'
+    | '/dashboard/creator'
+    | '/dashboard/student'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/about'
+    | '/auth'
+    | '/contact'
+    | '/creator-application'
+    | '/privacy'
+    | '/refund-policy'
+    | '/reset-password'
+    | '/terms'
+    | '/courses/$courseId'
+    | '/creators/$username'
+    | '/products/$productId'
+    | '/courses/'
+    | '/creators/'
+    | '/products/'
+    | '/_authenticated/dashboard/admin'
+    | '/_authenticated/dashboard/creator'
+    | '/_authenticated/dashboard/student'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AboutRoute: typeof AboutRoute
+  AuthRoute: typeof AuthRoute
+  ContactRoute: typeof ContactRoute
+  CreatorApplicationRoute: typeof CreatorApplicationRoute
+  PrivacyRoute: typeof PrivacyRoute
+  RefundPolicyRoute: typeof RefundPolicyRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  TermsRoute: typeof TermsRoute
+  CoursesCourseIdRoute: typeof CoursesCourseIdRoute
+  CreatorsUsernameRoute: typeof CreatorsUsernameRoute
+  ProductsProductIdRoute: typeof ProductsProductIdRoute
+  CoursesIndexRoute: typeof CoursesIndexRoute
+  CreatorsIndexRoute: typeof CreatorsIndexRoute
+  ProductsIndexRoute: typeof ProductsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +281,167 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/creator-application': {
+      id: '/creator-application'
+      path: '/creator-application'
+      fullPath: '/creator-application'
+      preLoaderRoute: typeof CreatorApplicationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refund-policy': {
+      id: '/refund-policy'
+      path: '/refund-policy'
+      fullPath: '/refund-policy'
+      preLoaderRoute: typeof RefundPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/courses/': {
+      id: '/courses/'
+      path: '/courses'
+      fullPath: '/courses/'
+      preLoaderRoute: typeof CoursesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/courses/$courseId': {
+      id: '/courses/$courseId'
+      path: '/courses/$courseId'
+      fullPath: '/courses/$courseId'
+      preLoaderRoute: typeof CoursesCourseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/creators/': {
+      id: '/creators/'
+      path: '/creators'
+      fullPath: '/creators/'
+      preLoaderRoute: typeof CreatorsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/creators/$username': {
+      id: '/creators/$username'
+      path: '/creators/$username'
+      fullPath: '/creators/$username'
+      preLoaderRoute: typeof CreatorsUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/': {
+      id: '/products/'
+      path: '/products'
+      fullPath: '/products/'
+      preLoaderRoute: typeof ProductsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/$productId': {
+      id: '/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof ProductsProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/dashboard/admin': {
+      id: '/_authenticated/dashboard/admin'
+      path: '/dashboard/admin'
+      fullPath: '/dashboard/admin'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard/creator': {
+      id: '/_authenticated/dashboard/creator'
+      path: '/dashboard/creator'
+      fullPath: '/dashboard/creator'
+      preLoaderRoute: typeof AuthenticatedDashboardCreatorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard/student': {
+      id: '/_authenticated/dashboard/student'
+      path: '/dashboard/student'
+      fullPath: '/dashboard/student'
+      preLoaderRoute: typeof AuthenticatedDashboardStudentRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRoute
+  AuthenticatedDashboardCreatorRoute: typeof AuthenticatedDashboardCreatorRoute
+  AuthenticatedDashboardStudentRoute: typeof AuthenticatedDashboardStudentRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardAdminRoute: AuthenticatedDashboardAdminRoute,
+  AuthenticatedDashboardCreatorRoute: AuthenticatedDashboardCreatorRoute,
+  AuthenticatedDashboardStudentRoute: AuthenticatedDashboardStudentRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AboutRoute: AboutRoute,
+  AuthRoute: AuthRoute,
+  ContactRoute: ContactRoute,
+  CreatorApplicationRoute: CreatorApplicationRoute,
+  PrivacyRoute: PrivacyRoute,
+  RefundPolicyRoute: RefundPolicyRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  TermsRoute: TermsRoute,
+  CoursesCourseIdRoute: CoursesCourseIdRoute,
+  CreatorsUsernameRoute: CreatorsUsernameRoute,
+  ProductsProductIdRoute: ProductsProductIdRoute,
+  CoursesIndexRoute: CoursesIndexRoute,
+  CreatorsIndexRoute: CreatorsIndexRoute,
+  ProductsIndexRoute: ProductsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
