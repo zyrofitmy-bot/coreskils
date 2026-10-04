@@ -1,238 +1,105 @@
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PublicLayout } from "@/components/layout/PublicLayout";
-import {
-  submitCreatorApplication,
-  getMyApplication,
-} from "@/lib/account.functions";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { getMyApplication, submitCreatorApplication } from "@/lib/account.functions";
 
 export const Route = createFileRoute("/creator-application")({
   head: () => ({
     meta: [
-      { title: "Become a Creator — CoreSkils" },
-      { name: "description", content: "Apply to teach and sell on CoreSkils." },
-      { property: "og:title", content: "Become a Creator — CoreSkils" },
-      { property: "og:description", content: "Apply to teach and sell on CoreSkils." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { title: "Apply to teach — CoreSkils" },
+      { name: "description", content: "Apply to become a creator on CoreSkils." },
     ],
   }),
-  component: CreatorApplicationPage,
+  component: CreatorApplication,
 });
 
-const inputCls =
-  "w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring";
+const fields = [
+  ["displayName", "Public display name", "text"],
+  ["headline", "Professional headline", "text"],
+  ["expertise", "Core expertise", "text"],
+  ["experienceYears", "Years of experience", "number"],
+  ["portfolioUrl", "Portfolio URL (optional)", "url"],
+  ["linkedinUrl", "LinkedIn URL (optional)", "url"],
+  ["websiteUrl", "Website URL (optional)", "url"],
+] as const;
 
-function CreatorApplicationPage() {
+function CreatorApplication() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
-  const [checking, setChecking] = useState(true);
-  const [existing, setExisting] = useState<any>(null);
-  const [busy, setBusy] = useState(false);
-  const [form, setForm] = useState({
-    displayName: "",
-    headline: "",
-    bio: "",
-    expertise: "",
-    experienceYears: 0,
-    portfolioUrl: "",
-    linkedinUrl: "",
-    websiteUrl: "",
-    teachingTopics: "",
-    courseProposal: "",
-    targetAudience: "",
-    motivation: "",
+  const { data: existing, isLoading } = useQuery({
+    queryKey: ["my-application"],
+    queryFn: () => getMyApplication(),
   });
-
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const initial = useMemo(() => existing ?? {
+    displayName: "", headline: "", bio: "", expertise: "", experienceYears: 0,
+    portfolioUrl: "", linkedinUrl: "", websiteUrl: "", teachingTopics: [],
+    courseProposal: "", targetAudience: "", motivation: "",
+  }, [existing]);
+  const [form, setForm] = useState<any>(initial);
+  const [topics, setTopics] = useState((((existing as any)?.teaching_topics ?? (initial as any).teachingTopics) ?? []).join(", "));
+  const initialized = useRef(false);
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) {
-        navigate({ to: "/auth" });
-        return;
-      }
-      setUser(data.user);
-      try {
-        const app = await getMyApplication();
-        setExisting(app);
-      } catch {}
-      setChecking(false);
-    });
-  }, [navigate]);
+    if (!isLoading && !initialized.current) {
+      setForm(initial);
+      setTopics((((existing as any)?.teaching_topics ?? (initial as any).teachingTopics) ?? []).join(", "));
+      initialized.current = true;
+    }
+  }, [initial, isLoading]);
+  const set = (key: string, value: unknown) => setForm((current: any) => ({ ...current, [key]: value }));
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
+  if (isLoading) return <PublicLayout><div className="min-h-screen flex items-center justify-center">Loading application…</div></PublicLayout>;
+  const status = existing?.status;
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsSubmitting(true);
     try {
       await submitCreatorApplication({
         data: {
-          displayName: form.displayName,
-          headline: form.headline || undefined,
-          bio: form.bio || undefined,
-          expertise: form.expertise || undefined,
+          ...form,
           experienceYears: Number(form.experienceYears) || 0,
-          portfolioUrl: form.portfolioUrl || undefined,
-          linkedinUrl: form.linkedinUrl || undefined,
-          websiteUrl: form.websiteUrl || undefined,
-          teachingTopics: form.teachingTopics
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean),
-          courseProposal: form.courseProposal || undefined,
-          targetAudience: form.targetAudience || undefined,
-          motivation: form.motivation || undefined,
+          teachingTopics: topics.split(",").map((topic: string) => topic.trim()).filter(Boolean),
         },
       });
-      toast.success("Application submitted! We'll review it shortly.");
-      setExisting({ status: "pending" });
-    } catch (err: any) {
-      toast.error(err.message ?? "Could not submit application");
+      await queryClient.invalidateQueries({ queryKey: ["my-application"] });
+      toast({ title: "Application submitted", description: "The team will review your creator profile." });
+    } catch (error: any) {
+      toast({ title: "Could not submit application", description: error.message, variant: "destructive" });
     } finally {
-      setBusy(false);
+      setIsSubmitting(false);
     }
-  }
-
-  if (checking) {
-    return (
-      <PublicLayout>
-        <div className="py-24 text-center text-muted-foreground">Loading…</div>
-      </PublicLayout>
-    );
-  }
+  };
 
   return (
     <PublicLayout>
-      <section className="mx-auto max-w-2xl px-6 py-16">
-        <h1 className="text-4xl font-bold text-foreground">Become a creator</h1>
-        <p className="mt-3 text-muted-foreground">
-          Teach courses and sell digital products on CoreSkils. Tell us about
-          yourself and what you want to teach.
-        </p>
-        {existing ? (
-          <div className="mt-8 rounded-2xl border border-border bg-card p-8 text-center">
-            <span
-              className={`inline-block rounded-full px-4 py-1.5 text-sm font-semibold capitalize ${
-                existing.status === "approved"
-                  ? "bg-primary/10 text-primary"
-                  : existing.status === "rejected"
-                    ? "bg-destructive/10 text-destructive"
-                    : "bg-secondary text-secondary-foreground"
-              }`}
-            >
-              {existing.status}
-            </span>
-            <p className="mt-4 text-sm text-muted-foreground">
-              {existing.status === "approved"
-                ? "You're approved! Head to your creator dashboard to start building."
-                : existing.status === "rejected"
-                  ? (existing.review_reason ?? "Your application was not approved this time.")
-                  : "Your application is under review. We'll notify you once it's decided."}
-            </p>
-            {existing.status === "approved" && (
-              <button
-                onClick={() => navigate({ to: "/dashboard/creator" })}
-                className="mt-6 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-              >
-                Open creator dashboard
-              </button>
-            )}
+      <main className="min-h-screen bg-[#FAFAFA] pt-32 pb-20 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8">
+            <p className="text-sm font-bold uppercase tracking-widest text-primary">Creator review</p>
+            <h1 className="text-4xl font-bold text-black mt-2">Apply to teach on CoreSkils</h1>
+            <p className="text-[#5F6870] mt-3 max-w-2xl">Share your experience and the course you want to build. Creator access is enabled only after a review.</p>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-            <input
-              value={form.displayName}
-              onChange={(e) => setForm({ ...form, displayName: e.target.value })}
-              placeholder="Display name *"
-              required
-              className={inputCls}
-            />
-            <input
-              value={form.headline}
-              onChange={(e) => setForm({ ...form, headline: e.target.value })}
-              placeholder="Headline (e.g. Wellness business coach)"
-              className={inputCls}
-            />
-            <textarea
-              value={form.bio}
-              onChange={(e) => setForm({ ...form, bio: e.target.value })}
-              placeholder="Short bio"
-              rows={3}
-              className={inputCls}
-            />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <input
-                value={form.expertise}
-                onChange={(e) => setForm({ ...form, expertise: e.target.value })}
-                placeholder="Area of expertise"
-                className={inputCls}
-              />
-              <input
-                type="number"
-                min={0}
-                value={form.experienceYears}
-                onChange={(e) => setForm({ ...form, experienceYears: Number(e.target.value) })}
-                placeholder="Years of experience"
-                className={inputCls}
-              />
+          {status && (
+            <div className={`rounded-xl border p-5 mb-6 ${status === "rejected" ? "bg-red-50 border-red-200" : status === "approved" ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
+              <p className="font-bold capitalize">Application {status}</p>
+              <p className="text-sm mt-1">{status === "pending" ? "Your details are in review." : status === "approved" ? "Creator tools are unlocked for your account." : `Please update your details and resubmit.${existing?.review_reason ? ` Review note: ${existing.review_reason}` : ""}`}</p>
             </div>
-            <input
-              value={form.teachingTopics}
-              onChange={(e) => setForm({ ...form, teachingTopics: e.target.value })}
-              placeholder="Teaching topics (comma separated)"
-              className={inputCls}
-            />
-            <textarea
-              value={form.courseProposal}
-              onChange={(e) => setForm({ ...form, courseProposal: e.target.value })}
-              placeholder="What course or product would you create first?"
-              rows={3}
-              className={inputCls}
-            />
-            <textarea
-              value={form.targetAudience}
-              onChange={(e) => setForm({ ...form, targetAudience: e.target.value })}
-              placeholder="Who is your target audience?"
-              rows={2}
-              className={inputCls}
-            />
-            <textarea
-              value={form.motivation}
-              onChange={(e) => setForm({ ...form, motivation: e.target.value })}
-              placeholder="Why do you want to teach on CoreSkils?"
-              rows={2}
-              className={inputCls}
-            />
-            <div className="grid gap-4 sm:grid-cols-3">
-              <input
-                value={form.portfolioUrl}
-                onChange={(e) => setForm({ ...form, portfolioUrl: e.target.value })}
-                placeholder="Portfolio URL"
-                className={inputCls}
-              />
-              <input
-                value={form.linkedinUrl}
-                onChange={(e) => setForm({ ...form, linkedinUrl: e.target.value })}
-                placeholder="LinkedIn URL"
-                className={inputCls}
-              />
-              <input
-                value={form.websiteUrl}
-                onChange={(e) => setForm({ ...form, websiteUrl: e.target.value })}
-                placeholder="Website URL"
-                className={inputCls}
-              />
+          )}
+          {status !== "approved" && <form onSubmit={submit} className="bg-white border border-[#E5E5E5] rounded-2xl p-6 md:p-10 shadow-sm space-y-7">
+            <div className="grid md:grid-cols-2 gap-5">
+              {fields.map(([key, label, type]) => <label key={key} className="space-y-2 text-sm font-medium text-[#394649]">{label}<input required={key !== "portfolioUrl" && key !== "linkedinUrl" && key !== "websiteUrl"} type={type} value={form[key] ?? ""} onChange={(e) => set(key, type === "number" ? Number(e.target.value) : e.target.value)} className="w-full h-11 rounded-lg border border-[#D9DEE5] px-3 outline-none focus:ring-2 focus:ring-primary/20" /></label>)}
             </div>
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-            >
-              {busy ? "Submitting…" : "Submit application"}
-            </button>
-          </form>
-        )}
-      </section>
+            <label className="block space-y-2 text-sm font-medium text-[#394649]">Teaching topics <input required value={topics} onChange={(e) => setTopics(e.target.value)} placeholder="React, AI fundamentals, product design" className="w-full h-11 rounded-lg border border-[#D9DEE5] px-3" /><span className="text-xs text-[#7A8490]">Separate topics with commas.</span></label>
+            {[["bio", "Short professional bio", 4], ["courseProposal", "What course do you want to create?", 4], ["targetAudience", "Who will learn from it?", 3], ["motivation", "Why do you want to teach on CoreSkils?", 4]].map(([key, label, rows]) => <label key={key as string} className="block space-y-2 text-sm font-medium text-[#394649]">{label as string}<textarea required value={form[key as string] ?? ""} onChange={(e) => set(key as string, e.target.value)} rows={rows as number} className="w-full rounded-lg border border-[#D9DEE5] p-3 resize-y" /></label>)}
+            <Button type="submit" disabled={isSubmitting} className="h-12 px-7">{isSubmitting ? "Submitting…" : status === "rejected" ? "Resubmit application" : "Submit for review"}</Button>
+          </form>}
+        </div>
+      </main>
     </PublicLayout>
   );
 }

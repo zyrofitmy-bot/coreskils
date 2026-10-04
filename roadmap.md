@@ -1,21 +1,21 @@
-# CoreSkils LMS rebuild — roadmap
+# CoreSkils exact-clone port — roadmap
 
 ## Done
-- [x] Map original repo (schema, pages, API)
-- [x] Database schema + RLS + category seeds (migrations 0000, 0001)
-- [x] Auth: email/password + Google enabled
-- [x] Server functions: marketplace, account, creator, admin
-- [x] Public pages: home, courses, course detail, products, product detail, creators, creator profile, about, contact, terms, privacy, refund policy
-- [x] Auth pages: sign in/up, reset password, creator application
-- [x] Dashboards: student, creator, admin (behind auth gate)
-- [x] Build clean; public pages verified rendering in browser
+- [x] Lovable Cloud enabled; schema + RLS + categories seeded
+- [x] Auth: email/password + Google
+- [x] Foundation ported from original repo: theme CSS, layout (Navbar/Footer/PublicLayout/DashboardLayout), i18n, session hook, toast, error boundary, assets in public/images + public/brand
+- [x] Public pages ported: Home, About, Courses, Creators, CreatorProfile, Products
+- [x] Auth pages ported: login, sign-up, creator application
+- [x] Dashboard components ported: dialogs, course player, product views
+- [x] Build green (typecheck OK)
 
-## Blocked — needs user action
-- [ ] First user sign-up: no accounts exist yet and email confirmation is on, so I can't create one. Sign up via "Get started", confirm the email, then tell me — I'll make you admin + creator and seed demo courses/products.
+## In progress (agents running)
+- [ ] CourseDetail + ProductDetail routes (agent sub_yfz5dayz)
+- [ ] Compliance pages overwrite with original copy (agent sub_yfz5dayz)
+- [ ] NotFound / UnavailablePage (agent sub_yfz5dayz)
+- [ ] Student/Creator/Admin dashboard route overwrites with original design (agent sub_9n48zr1x)
 
-## Deferred (phase 2)
-- [ ] Live classes (LiveKit)
-- [ ] Payments (ZapUPI / Stripe / Paddle)
-- [ ] AI course outline generation
-- [ ] File/video uploads to storage
-- [ ] Certificates issuance UI
+## Blocked / later
+- [ ] Demo data seeding — needs first user sign-up + email confirmation (no auth users yet)
+- [ ] Phase 2: live classes (LiveKit), ZapUPI payments, file/video uploads, AI outlines, admin settings backend
+- [ ] End-to-end browser verification with a signed-in account

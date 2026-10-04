@@ -1,13 +1,22 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { BookOpen, Check, ChevronDown, Star } from "lucide-react";
-import { toast } from "sonner";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { queryOptions, useSuspenseQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { getCourse } from "@/lib/marketplace.functions";
-import { enrollInCourse, addReview } from "@/lib/account.functions";
-import { formatPrice, formatDate } from "@/lib/format";
-import { supabase } from "@/integrations/supabase/client";
+import { enrollInCourse, getMyLibrary } from "@/lib/account.functions";
+import { useGetSession } from "@/lib/use-session";
+import { useToast } from "@/hooks/use-toast";
+import { BookOpen, CheckCircle2, Clock, Play, AlertCircle, MonitorPlay, Infinity, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { CourseThumbnail } from "@/components/courses/CourseThumbnail";
+import { Input } from "@/components/ui/input";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const courseQuery = (id: string) =>
   queryOptions({
@@ -18,263 +27,306 @@ const courseQuery = (id: string) =>
 export const Route = createFileRoute("/courses/$courseId")({
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(courseQuery(params.courseId)),
-  head: () => ({
-    meta: [
-      { title: "Course — CoreSkils" },
-      { name: "description", content: "Course details on CoreSkils." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-  component: CourseDetailPage,
+  component: CourseDetail,
 });
 
-function CourseDetailPage() {
-  const { courseId } = Route.useParams();
-  const { data: course } = useSuspenseQuery(courseQuery(courseId));
+function CourseDetail() {
+  const { courseId: courseKey } = Route.useParams();
+  const { data: course } = useSuspenseQuery(courseQuery(courseKey));
   const navigate = useNavigate();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [enrolling, setEnrolling] = useState(false);
-  const [openModule, setOpenModule] = useState<string | null>(null);
-  const [rating, setRating] = useState(5);
-  const [reviewBody, setReviewBody] = useState("");
+
+  const { data: session } = useGetSession();
+  const { data: library } = useQuery({
+    queryKey: ["my-library"],
+    queryFn: () => getMyLibrary(),
+    enabled: session?.authenticated === true,
+  });
+
+  const enrollMutation = useMutation({
+    mutationFn: (courseId: string) => enrollInCourse({ data: { courseId } }),
+    onSuccess: () => {
+      toast({
+        title: "Enrollment successful",
+        description: "You have successfully enrolled in this course for free."
+      });
+      queryClient.invalidateQueries({ queryKey: ["course", courseKey] });
+      queryClient.invalidateQueries({ queryKey: ["my-library"] });
+      navigate({ to: "/dashboard/student" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Enrollment failed", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const [phone, setPhone] = useState("");
+
+  const courseId = course?.id || "";
+  const isEnrolled = library?.some((item: any) => item.course_id === courseId) ?? false;
+
+  const handleEnroll = () => {
+    if (!session?.authenticated) {
+      navigate({ to: "/auth/login" });
+      return;
+    }
+    enrollMutation.mutate(courseId);
+  };
+
+  const handleCheckout = () => {
+    // TODO(phase2): Implement ZapUPI checkout logic when server function is available
+    toast({
+      title: "Checkout not implemented",
+      description: "Payment gateway integration is coming soon.",
+      variant: "default"
+    });
+  };
 
   if (!course) {
     return (
       <PublicLayout>
-        <div className="mx-auto max-w-3xl px-6 py-24 text-center">
-          <h1 className="text-2xl font-bold">Course not found</h1>
-          <Link to="/courses" className="mt-4 inline-block text-primary hover:underline">
-            Browse all courses
-          </Link>
+        <div className="min-h-screen bg-white pt-32 pb-20 flex flex-col items-center justify-center">
+          <AlertCircle className="w-12 h-12 text-red-600 mb-4" />
+          <h2 className="text-[24px] font-bold mb-2 text-black">Course not found</h2>
+          <p className="text-[#394649]">The course you're looking for doesn't exist or has been removed.</p>
+          <Link to="/courses" className="mt-6 h-[44px] px-8 bg-primary hover:bg-[#10A364] text-white font-medium rounded-md text-[16px] inline-flex items-center justify-center">Browse Courses</Link>
         </div>
       </PublicLayout>
     );
   }
 
-  const lessonCount = course.modules.reduce(
-    (n: number, m: any) => n + (m.lessons?.length ?? 0),
-    0,
-  );
-  const avgRating =
-    course.reviews.length > 0
-      ? course.reviews.reduce((s: number, r: any) => s + r.rating, 0) / course.reviews.length
-      : null;
-
-  async function handleEnroll() {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) {
-      navigate({ to: "/auth" });
-      return;
-    }
-    setEnrolling(true);
-    try {
-      await enrollInCourse({ data: { courseId: course!.id } });
-      toast.success("You're enrolled! Find it in your dashboard.");
-      navigate({ to: "/dashboard/student" });
-    } catch (e: any) {
-      toast.error(e.message ?? "Could not enroll");
-    } finally {
-      setEnrolling(false);
-    }
-  }
-
-  async function handleReview() {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) {
-      navigate({ to: "/auth" });
-      return;
-    }
-    try {
-      await addReview({
-        data: { courseId: course!.id, rating, body: reviewBody || undefined },
-      });
-      toast.success("Review submitted");
-      setReviewBody("");
-      queryClient.invalidateQueries({ queryKey: ["course", courseId] });
-    } catch (e: any) {
-      toast.error(e.message ?? "Could not submit review");
-    }
-  }
+  const totalLessons = course.modules?.reduce((acc: number, mod: any) => acc + (mod.lessons?.length || 0), 0) || 0;
 
   return (
     <PublicLayout>
-      <section className="bg-secondary/50 py-14">
-        <div className="mx-auto grid max-w-6xl gap-10 px-6 md:grid-cols-[1fr_360px]">
-          <div>
-            {course.categories?.name && (
-              <span className="text-sm font-semibold uppercase tracking-wide text-primary">
-                {course.categories.name}
-              </span>
-            )}
-            <h1 className="mt-2 text-4xl font-bold text-foreground">{course.title}</h1>
-            <p className="mt-4 text-lg text-muted-foreground">{course.description}</p>
-            <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-              <span className="capitalize">{course.level} level</span>
-              <span>{lessonCount} lessons</span>
-              {avgRating && (
-                <span className="inline-flex items-center gap-1">
-                  <Star className="size-4 fill-action text-action" />
-                  {avgRating.toFixed(1)} ({course.reviews.length} reviews)
-                </span>
-              )}
-            </div>
-            {course.creator && (
-              <div className="mt-6 flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                  {course.creator.display_name?.[0] ?? "C"}
+      <div className="bg-white min-h-screen text-black">
+        {/* Hero Section */}
+        <section className="pt-32 pb-20 bg-white border-b border-[#E5E5E5] relative overflow-hidden">
+          <div className="container mx-auto px-4 md:px-8 relative z-10">
+            <div className="grid lg:grid-cols-12 gap-12 items-center">
+              <div className="space-y-8 lg:col-span-7">
+                <div className="flex flex-wrap gap-2">
+                  <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[13px] font-bold">
+                    {(course.price_minor ?? 0) > 0 ? new Intl.NumberFormat("en-IN", { style: "currency", currency: course.currency || "INR", maximumFractionDigits: 2 }).format((course.price_minor ?? 0) / 100) : "Free Course"}
+                  </span>
+                  {course.categories?.name && <span className="border border-[#BDE8D1] bg-[#E8F8EF] text-[#087B46] px-3 py-1 rounded-full text-[13px] font-medium">{course.categories.name}</span>}
+                  <span className="border border-[#E5E5E5] text-[#394649] px-3 py-1 rounded-full text-[13px] font-medium capitalize">{course.level || "Beginner"}</span>
                 </div>
+
                 <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    {course.creator.display_name}
-                  </p>
-                  {course.creator.username && (
-                    <Link
-                      to="/creators/$username"
-                      params={{ username: course.creator.username }}
-                      className="text-xs text-primary hover:underline"
-                    >
-                      View creator profile
+                  <h1 className="text-[40px] lg:text-[46px] font-bold tracking-tight text-black mb-4 leading-[1.1]">
+                    {course.title}
+                  </h1>
+                  {course.creator?.display_name && (
+                    <p className="text-[16px] text-[#394649]">
+                      Created by {course.creator.username ? (
+                        <Link to="/creators/$username" params={{ username: course.creator.username }} className="font-medium text-black underline decoration-primary/40 underline-offset-4 hover:text-primary">
+                          {course.creator.display_name}
+                        </Link>
+                      ) : <span className="font-medium text-black">{course.creator.display_name}</span>}
+                    </p>
+                  )}
+                </div>
+
+                <p className="text-[18px] text-[#394649] leading-relaxed max-w-2xl">
+                  {course.description}
+                </p>
+
+                <div className="flex flex-wrap items-center gap-6 pt-2 text-[14px] font-medium text-[#394649]">
+                  <div className="flex items-center gap-2">
+                    <Infinity className="w-5 h-5 text-primary" />
+                    <span>{(course as any).access_plan === "monthly" ? "30 days access" : (course as any).access_plan === "yearly" ? "1 year access" : (course as any).access_plan === "fixed_days" ? `${(course as any).access_days} days access` : "Lifetime Access"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-primary" />
+                    <span>{totalLessons} Lessons</span>
+                  </div>
+                </div>
+
+                <div className="pt-6 flex gap-4 lg:hidden">
+                  {isEnrolled ? (
+                    <Link to="/dashboard/student" className="h-[54px] px-10 bg-primary hover:bg-[#10A364] text-white font-medium rounded-md text-[16px] shadow-[0_10px_24px_rgba(21,207,116,0.35)] w-full inline-flex items-center justify-center">
+                        Resume Learning
                     </Link>
+                  ) : (course.price_minor ?? 0) === 0 || ((course as any).trial_days ?? 0) > 0 ? (
+                    <Button
+                      className="h-[54px] px-10 bg-primary hover:bg-[#10A364] text-white font-medium rounded-md text-[16px] shadow-[0_10px_24px_rgba(21,207,116,0.35)] w-full"
+                      onClick={handleEnroll}
+                      disabled={enrollMutation.isPending}
+                    >
+                      {enrollMutation.isPending ? "Enrolling..." : ((course as any).trial_days ?? 0) > 0 && (course.price_minor ?? 0) > 0 ? `Start ${(course as any).trial_days}-day free trial` : "Enroll for Free"}
+                    </Button>
+                  ) : (
+                    <div className="w-full space-y-3">
+                      <Input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Mobile number for UPI checkout" />
+                      <Button className="h-[54px] w-full bg-primary text-white hover:bg-[#10A364]" onClick={handleCheckout}>
+                        Buy course for {new Intl.NumberFormat("en-IN", { style: "currency", currency: course.currency || "INR" }).format((course.price_minor ?? 0) / 100)}
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
-            )}
-          </div>
-          <div className="h-fit rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <div className="aspect-video overflow-hidden rounded-xl bg-secondary">
-              {course.thumbnail_url ? (
-                <img src={course.thumbnail_url} alt={course.title} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full items-center justify-center">
-                  <BookOpen className="size-10 text-primary/40" />
-                </div>
-              )}
-            </div>
-            <p className="mt-5 text-3xl font-bold text-foreground">
-              {formatPrice(course.price_minor, course.currency)}
-            </p>
-            <button
-              onClick={handleEnroll}
-              disabled={enrolling}
-              className="mt-4 w-full rounded-full bg-action py-3 text-base font-semibold text-action-foreground transition-transform hover:scale-[1.02] disabled:opacity-60"
-            >
-              {enrolling ? "Enrolling…" : "Enroll now"}
-            </button>
-          </div>
-        </div>
-      </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-14">
-        <div className="grid gap-12 md:grid-cols-[1fr_360px]">
-          <div className="space-y-12">
-            {course.outcomes.length > 0 && (
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">What you'll learn</h2>
-                <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-                  {course.outcomes.map((o: string) => (
-                    <li key={o} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Check className="mt-0.5 size-4 shrink-0 text-primary" /> {o}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">Curriculum</h2>
-              <div className="mt-4 space-y-3">
-                {course.modules.map((m: any, i: number) => (
-                  <div key={m.id} className="rounded-xl border border-border bg-card">
-                    <button
-                      onClick={() => setOpenModule(openModule === m.id ? null : m.id)}
-                      className="flex w-full items-center justify-between px-5 py-4 text-left"
-                    >
-                      <span className="font-semibold text-card-foreground">
-                        {i + 1}. {m.title}
-                      </span>
-                      <ChevronDown
-                        className={`size-4 transition-transform ${openModule === m.id ? "rotate-180" : ""}`}
-                      />
-                    </button>
-                    {openModule === m.id && (
-                      <ul className="border-t border-border px-5 py-3">
-                        {(m.lessons ?? [])
-                          .sort((a: any, b: any) => a.position - b.position)
-                          .map((l: any) => (
-                            <li
-                              key={l.id}
-                              className="flex items-center justify-between py-2 text-sm text-muted-foreground"
-                            >
-                              <span>{l.title}</span>
-                              {l.is_preview && (
-                                <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
-                                  Preview
-                                </span>
-                              )}
-                            </li>
-                          ))}
-                      </ul>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">Reviews</h2>
-              <div className="mt-4 space-y-4">
-                {course.reviews.length === 0 && (
-                  <p className="text-sm text-muted-foreground">No reviews yet.</p>
-                )}
-                {course.reviews.map((r: any) => (
-                  <div key={r.id} className="rounded-xl border border-border bg-card p-5">
-                    <div className="flex items-center gap-2">
-                      <div className="flex">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`size-4 ${i < r.rating ? "fill-action text-action" : "text-border"}`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-sm font-semibold text-foreground">
-                        {r.profiles?.name ?? "Learner"}
-                      </span>
-                      <span className="text-xs text-muted-foreground">{formatDate(r.created_at)}</span>
-                    </div>
-                    {r.body && <p className="mt-2 text-sm text-muted-foreground">{r.body}</p>}
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6 rounded-xl border border-border bg-card p-5">
-                <h3 className="font-semibold text-card-foreground">Write a review</h3>
-                <div className="mt-3 flex gap-1">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <button key={i} onClick={() => setRating(i + 1)}>
-                      <Star
-                        className={`size-6 ${i < rating ? "fill-action text-action" : "text-border"}`}
-                      />
-                    </button>
-                  ))}
+              <div className="lg:col-span-5">
+                <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-gray-100 border border-[#E5E5E5] flex items-center justify-center group shadow-sm">
+                  <CourseThumbnail src={course.thumbnail_url || ""} title={course.title} className="transition-transform duration-700 group-hover:scale-105" />
                 </div>
-                <textarea
-                  value={reviewBody}
-                  onChange={(e) => setReviewBody(e.target.value)}
-                  placeholder="Share your experience…"
-                  className="mt-3 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                  rows={3}
-                />
-                <button
-                  onClick={handleReview}
-                  className="mt-3 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-                >
-                  Submit review
-                </button>
               </div>
             </div>
           </div>
-          <div />
-        </div>
-      </section>
+        </section>
+
+        {/* Content Section */}
+        <section className="py-24">
+          <div className="container mx-auto px-4 md:px-8">
+            <div className="grid lg:grid-cols-12 gap-16">
+              <div className="lg:col-span-8 space-y-16">
+
+                {/* Outcomes */}
+                {course.outcomes && (course.outcomes as string[]).length > 0 && (
+                  <div>
+                    <h2 className="text-[32px] font-bold mb-8 flex items-center gap-3 text-black">
+                      What you'll learn
+                    </h2>
+                    <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4 bg-[#F8F9FA] border border-[#E5E5E5] rounded-lg p-8">
+                      {(course.outcomes as string[]).map((item: string, i: number) => (
+                        <div key={i} className="flex gap-4">
+                          <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                          <span className="text-[#394649] text-[16px] leading-relaxed">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Curriculum */}
+                <div>
+                  <h2 className="text-[32px] font-bold mb-8 flex items-center gap-3 text-black">
+                    Course Curriculum
+                  </h2>
+
+                  {(!course.modules || course.modules.length === 0) ? (
+                    <div className="p-8 text-center border border-[#E5E5E5] rounded-lg bg-white">
+                      <p className="text-[#9794AA]">Curriculum details are being finalized.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {course.modules.map((module: any, mIndex: number) => (
+                        <div key={module.id} className="border border-[#E5E5E5] rounded-lg overflow-hidden bg-white shadow-sm">
+                          <div className="bg-[#F8F9FA] p-5 border-b border-[#E5E5E5] flex justify-between items-center">
+                            <div>
+                              <h3 className="font-bold text-[18px] text-black">Module {mIndex + 1}: {module.title}</h3>
+                              <p className="text-[14px] text-[#9794AA] mt-1">{module.lessons?.length || 0} lessons</p>
+                            </div>
+                          </div>
+                          <div className="divide-y divide-[#E5E5E5]">
+                            {module.lessons?.map((lesson: any, lIndex: number) => (
+                              <div key={lesson.id} className="flex items-center justify-between p-5 hover:bg-gray-50 transition-colors">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-[14px] shrink-0">
+                                    {lIndex + 1}
+                                  </div>
+                                  <div>
+                                    <h4 className="font-medium text-black text-[16px]">{lesson.title}</h4>
+                                    {lesson.description && (
+                                      <p className="text-[14px] text-[#394649] mt-1">{lesson.description}</p>
+                                    )}
+                                  </div>
+                                </div>
+                                {lesson.is_preview ? (
+                                  <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[12px] font-bold ml-4 shrink-0">Preview</span>
+                                ) : (
+                                  <Clock className="w-4 h-4 text-[#9794AA] ml-4 shrink-0" />
+                                )}
+                              </div>
+                            ))}
+                            {(!module.lessons || module.lessons.length === 0) && (
+                              <div className="p-5 text-[14px] text-[#9794AA] italic">
+                                Lessons coming soon
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* FAQs */}
+                {/* TODO(phase2) check if faqs field exists in courses table */}
+                {(course as any).faqs && ((course as any).faqs as any[]).length > 0 && (
+                  <div>
+                    <h2 className="text-[32px] font-bold mb-8 text-black">Frequently Asked Questions</h2>
+                    <Accordion type="single" collapsible className="w-full space-y-4">
+                      {((course as any).faqs as any[]).map((faq, i) => (
+                        <AccordionItem key={i} value={`faq-${i}`} className="bg-white border border-[#E5E5E5] rounded-lg px-6">
+                          <AccordionTrigger className="text-left font-bold text-black hover:no-underline py-6 text-[18px]">
+                            {faq.question}
+                          </AccordionTrigger>
+                          <AccordionContent className="text-[#394649] text-[16px] pb-6 leading-relaxed">
+                            {faq.answer}
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  </div>
+                )}
+              </div>
+
+              {/* Sticky Sidebar */}
+              <div className="lg:col-span-4 hidden lg:block">
+                <div className="sticky top-32 border border-[#E5E5E5] bg-white rounded-lg p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
+                  <div className="flex gap-4 mb-6">
+                    <div className="w-20 h-20 rounded bg-gray-100 border border-[#E5E5E5] flex-shrink-0 overflow-hidden">
+                      <CourseThumbnail src={course.thumbnail_url || ""} title={course.title} />
+                    </div>
+                    <div className="flex flex-col justify-center">
+                      <h4 className="text-[14px] font-bold text-black line-clamp-2 leading-snug">{course.title}</h4>
+                      {course.creator?.display_name && <p className="text-[13px] text-[#9794AA] mt-1">{course.creator.display_name}</p>}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 mb-6 pt-4 border-t border-[#E5E5E5]">
+                    <div className="flex items-center justify-between text-[16px]">
+                      <span className="text-[#394649]">Course price</span>
+                      <span className="text-black font-medium">{(course.price_minor ?? 0) > 0 ? new Intl.NumberFormat("en-IN", { style: "currency", currency: course.currency || "INR" }).format((course.price_minor ?? 0) / 100) : "Free"}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[16px]">
+                      <span className="text-[#394649]">Access</span>
+                      <span className="text-black font-medium">{(course as any).access_plan === "monthly" ? "30 days" : (course as any).access_plan === "yearly" ? "1 year" : (course as any).access_plan === "fixed_days" ? `${(course as any).access_days} days` : "Lifetime"}</span>
+                    </div>
+                    <div className="flex items-center justify-between pt-4 border-t border-[#E5E5E5]">
+                      <span className="text-black font-bold text-[18px]">Total</span>
+                      <span className="text-black font-bold text-[24px]">{(course.price_minor ?? 0) > 0 ? new Intl.NumberFormat("en-IN", { style: "currency", currency: course.currency || "INR" }).format((course.price_minor ?? 0) / 100) : "Free"}</span>
+                    </div>
+                  </div>
+
+                  {isEnrolled ? (
+                    <Link to="/dashboard/student" className="w-full h-[54px] bg-primary hover:bg-[#10A364] text-white font-medium rounded-md text-[16px] shadow-[0_10px_24px_rgba(21,207,116,0.35)] inline-flex items-center justify-center">
+                        Resume Learning
+                    </Link>
+                  ) : (course.price_minor ?? 0) === 0 || ((course as any).trial_days ?? 0) > 0 ? (
+                    <Button
+                      className="w-full h-[54px] bg-primary hover:bg-[#10A364] text-white font-medium rounded-md text-[16px] shadow-[0_10px_24px_rgba(21,207,116,0.35)]"
+                      onClick={handleEnroll}
+                      disabled={enrollMutation.isPending}
+                    >
+                      {enrollMutation.isPending ? "Enrolling..." : ((course as any).trial_days ?? 0) > 0 && (course.price_minor ?? 0) > 0 ? `Start ${(course as any).trial_days}-day free trial` : "Enroll for Free"}
+                    </Button>
+                  ) : (
+                    <div className="space-y-3">
+                      <Input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Mobile number for UPI checkout" />
+                      <Button className="h-[54px] w-full bg-primary text-white hover:bg-[#10A364]" onClick={handleCheckout}>
+                        Buy for {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format((course.price_minor ?? 0) / 100)}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </PublicLayout>
   );
 }

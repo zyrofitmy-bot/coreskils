@@ -1,145 +1,175 @@
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Menu, X, LogOut, LayoutDashboard } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { getMyAccount } from "@/lib/account.functions";
-import logoHorizontal from "@/assets/logo-horizontal.svg.asset.json";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useTranslations } from "@/lib/i18n";
+import { useToast } from "@/hooks/use-toast";
+import { LayoutDashboard, LogOut, Menu, X, ChevronRight } from "lucide-react";
+import { logout, useGetSession } from "@/lib/use-session";
 
 export function Navbar() {
-  const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<{ id: string } | null>(null);
-  const [roles, setRoles] = useState<string[]>([]);
+  const t = useTranslations("navbar");
+  const { data: session, isPending } = useGetSession();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ?? null);
-    });
-    return () => subscription.unsubscribe();
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    if (!user) {
-      setRoles([]);
+  const user = session?.authenticated ? session.user : null;
+  const dashboardHref = `/dashboard/${user?.role || "student"}`;
+  const userName = user?.name || user?.email || "User";
+  const userInitial = userName.charAt(0).toUpperCase();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      toast({ title: t("logoutFailed"), variant: "destructive" });
       return;
     }
-    getMyAccount().then((acc) => setRoles(acc.roles)).catch(() => {});
-  }, [user]);
+    queryClient.invalidateQueries();
+    navigate({ to: "/" });
+  };
 
-  const dashboardPath = (
-    roles.includes("admin")
-      ? "/dashboard/admin"
-      : roles.includes("creator")
-        ? "/dashboard/creator"
-        : "/dashboard/student"
-  ) as "/dashboard/admin" | "/dashboard/creator" | "/dashboard/student";
-
-  const links = [
-    { to: "/courses", label: "Courses" },
-    { to: "/products", label: "Products" },
-    { to: "/creators", label: "Creators" },
-    { to: "/about", label: "About" },
-  ];
+  const NavLinks = ({ onClick }: { onClick?: () => void }) => (
+    <>
+      <Link to="/" onClick={onClick} className="block py-3 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900 lg:py-0">
+        {t("home")}
+      </Link>
+      <Link to="/courses" onClick={onClick} className="block py-3 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900 lg:py-0">
+        Courses
+      </Link>
+      <Link to="/products" onClick={onClick} className="block py-3 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900 lg:py-0">
+        Digital products
+      </Link>
+      <Link to="/about" onClick={onClick} className="block py-3 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900 lg:py-0">
+        {t("about")}
+      </Link>
+      <Link to="/contact" onClick={onClick} className="block py-3 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900 lg:py-0">
+        Contact
+      </Link>
+    </>
+  );
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-        <Link to="/" className="flex items-center">
-          <img src={logoHorizontal.url} alt="CoreSkils" className="h-8 w-auto" />
-        </Link>
-        <nav className="hidden items-center gap-6 md:flex">
-          {links.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              activeProps={{ className: "text-primary" }}
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="hidden items-center gap-3 md:flex">
-          {user ? (
+    <nav className={`fixed top-0 z-50 w-full transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md border-b border-slate-200/50 shadow-sm' : 'bg-white/0 border-b border-transparent'}`}>
+      <div className="container mx-auto flex h-20 items-center justify-between px-4 lg:px-8 max-w-7xl">
+        
+        {/* Brand */}
+        <div className="flex items-center">
+          <Link to="/" className="flex items-center space-x-2 shrink-0 group">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+              <img src="/brand/logo-mark.svg" alt="CoreSkils" className="w-5 h-5 brightness-0 invert" />
+            </div>
+            <span className="font-heading font-bold text-xl text-slate-900 tracking-tight hidden sm:block">
+              CoreSkils
+            </span>
+          </Link>
+        </div>
+
+        {/* Center Links - Desktop */}
+        <div className="hidden lg:flex items-center justify-center absolute left-1/2 -translate-x-1/2 space-x-8">
+          <NavLinks />
+        </div>
+
+        {/* Right Actions */}
+        <div className="flex shrink-0 items-center space-x-4">
+          {isPending ? (
+            <div className="h-9 w-24 rounded-full bg-slate-100 animate-pulse" aria-hidden="true" />
+          ) : user ? (
             <>
-              <Link
-                to={dashboardPath}
-                className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
-              >
-                <LayoutDashboard className="size-4" /> Dashboard
+              <Link to={dashboardHref}>
+                <span className="hidden text-sm font-medium text-slate-600 hover:text-primary transition-colors cursor-pointer sm:inline-block" data-testid="link-dashboard">
+                  {t("dashboard")}
+                </span>
               </Link>
-              <button
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  navigate({ to: "/" });
-                }}
-                className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <LogOut className="size-4" /> Sign out
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm ring-2 ring-white hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    aria-label={t("accountMenu")}
+                    data-testid="button-account-menu"
+                  >
+                    {userInitial}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 mt-2 rounded-xl">
+                  <DropdownMenuLabel className="font-normal p-3">
+                    <p className="text-sm font-bold text-slate-900 truncate">{userName}</p>
+                    {user.email && <p className="text-xs text-slate-500 truncate mt-0.5">{user.email}</p>}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => navigate({ to: dashboardHref as any })} data-testid="menu-dashboard" className="cursor-pointer py-2.5">
+                    <LayoutDashboard className="w-4 h-4 mr-2" />
+                    {t("dashboard")}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => void handleLogout()} data-testid="menu-logout" className="cursor-pointer py-2.5 text-red-600 focus:text-red-600">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    {t("logout")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>
-              <Link
-                to="/auth"
-                className="rounded-full px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
-              >
-                Sign in
+              <Link to="/auth/login" className="hidden text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900 lg:block">
+                {t("login")}
               </Link>
-              <Link
-                to="/auth"
-                search={{ mode: "signup" }}
-                className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-              >
-                Get started
+              <Link to="/auth/sign-up" data-testid="link-start-free" className="hidden h-10 items-center justify-center rounded-lg bg-[#0F1C16] px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-slate-800 hover:-translate-y-0.5 sm:inline-flex group">
+                  {t("join")} <ChevronRight className="w-3.5 h-3.5 ml-1 opacity-70 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </>
           )}
+
+          {/* Mobile Menu Toggle */}
+          <button 
+            className="lg:hidden p-2 text-slate-600 hover:text-slate-900 transition-colors" 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isMobileMenuOpen}
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
-        <button
-          className="md:hidden"
-          onClick={() => setOpen(!open)}
-          aria-label="Toggle menu"
-        >
-          {open ? <X className="size-6" /> : <Menu className="size-6" />}
-        </button>
       </div>
-      {open && (
-        <div className="border-t border-border bg-background px-6 py-4 md:hidden">
-          <div className="flex flex-col gap-3">
-            {links.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                onClick={() => setOpen(false)}
-                className="text-sm font-medium text-foreground"
-              >
-                {l.label}
-              </Link>
-            ))}
-            {user ? (
-              <Link
-                to={dashboardPath}
-                onClick={() => setOpen(false)}
-                className="text-sm font-semibold text-primary"
-              >
-                Dashboard
-              </Link>
-            ) : (
-              <Link
-                to="/auth"
-                onClick={() => setOpen(false)}
-                className="text-sm font-semibold text-primary"
-              >
-                Sign in
-              </Link>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden border-t border-slate-100 bg-white p-4 shadow-lg absolute w-full left-0 animate-fade-in-up">
+          <div className="flex flex-col pb-4 max-w-sm mx-auto">
+            <NavLinks onClick={() => setIsMobileMenuOpen(false)} />
+            {!user && (
+              <>
+                <div className="h-px bg-slate-100 w-full my-4"></div>
+                <Link to="/auth/login" className="py-3 text-sm font-semibold text-slate-600" onClick={() => setIsMobileMenuOpen(false)}>
+                  {t("login")}
+                </Link>
+                <Link to="/auth/sign-up" onClick={() => setIsMobileMenuOpen(false)} className="mt-2 inline-flex h-12 w-full items-center justify-center rounded-xl bg-[#0F1C16] text-sm font-semibold text-white shadow-sm hover:bg-slate-800">
+                    {t("join")}
+                </Link>
+              </>
             )}
           </div>
         </div>
       )}
-    </header>
+    </nav>
   );
 }

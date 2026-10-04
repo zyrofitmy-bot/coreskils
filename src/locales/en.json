@@ -1,0 +1,134 @@
+{
+  "navbar": {
+    "brand": "CoreSkils",
+    "features": "Features",
+    "pricing": "Pricing",
+    "creators": "Creators",
+    "courses": "Courses",
+    "about": "About",
+    "dashboard": "Dashboard",
+    "login": "Sign in",
+    "startFree": "Start Free",
+    "join": "Create Account",
+    "logout": "Log out",
+    "accountMenu": "Account menu",
+    "logoutFailed": "Could not log out. Please try again.",
+    "searchPlaceholder": "What do you want to learn today?",
+    "home": "Home"
+  },
+  "footer": {
+    "description": "A learning marketplace where independent instructors publish courses and learners build practical skills at their own pace.",
+    "explore": "Explore",
+    "teach": "Teach",
+    "account": "Account",
+    "links": {
+      "courses": "Courses",
+      "products": "Digital products",
+      "pricing": "Pricing",
+      "about": "About",
+      "forCreators": "For creators",
+      "platformPricing": "Platform pricing",
+      "creatorDashboard": "Creator dashboard",
+      "signIn": "Sign in",
+      "joinFree": "Join for free",
+      "myLearning": "My learning"
+    },
+    "copyright": "Copyright © {year} {platform}. All rights reserved.",
+    "tagline": "Learn from independent instructors. Teach what you know."
+  },
+  "home": {
+    "hero": {
+      "title1": "Learn practical skills.",
+      "title2": "Teach what",
+      "title3": "you know.",
+      "subtitle": "Discover courses published by independent instructors, or create and list your own course on one trusted marketplace.",
+      "startLearning": "Explore Courses",
+      "pills": {
+        "mentors": "Instructors",
+        "mentor": "Instructor",
+        "categories": "Categories",
+        "category": "Category",
+        "lessons": "Lessons",
+        "lesson": "Lesson",
+        "courses": "Courses",
+        "course": "Course"
+      }
+    },
+    "stats": {
+      "courses": "COURSES",
+      "lessons": "LESSONS",
+      "mentors": "INSTRUCTORS",
+      "categories": "CATEGORIES"
+    },
+    "courses": {
+      "title": "Explore courses from independent instructors",
+      "featured": "Featured",
+      "viewAll": "View all courses",
+      "empty": "No courses found for this category.",
+      "unknownAuthor": "Unknown Author",
+      "beginner": "Beginner",
+      "lessons": "Lessons"
+    },
+    "cta": {
+      "title1": "Learn something new",
+      "title2": "or share what you know",
+      "subtitle": "Create a free learner account, or apply to publish your own courses as an instructor.",
+      "button": "Join CoreSkils"
+    },
+    "mentors": {
+      "title": "Featured Instructors",
+      "subtitleSingle": "{count} Course",
+      "subtitlePlural": "{count} Courses"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome to CoreSkils",
+      "subtitle": "Kindly fill in your details below to continue",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "Enter your email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••••••",
+      "button": "Login",
+      "buttonLoading": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "createOne": "Create one",
+      "error": "The email or password is incorrect."
+    },
+    "signup": {
+      "title": "Create an account",
+      "subtitle": "Kindly fill in your details below to continue",
+      "nameLabel": "Full Name",
+      "namePlaceholder": "Enter your full name",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "Enter your email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••••••",
+      "button": "Sign up",
+      "buttonLoading": "Creating...",
+      "haveAccount": "Already have an account?",
+      "logIn": "Log in",
+      "error": "We could not create this account. Try another email."
+    },
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
+  },
+  "errors": {
+    "unavailable": {
+      "title": "Currently Unavailable",
+      "desc": "This feature (including payments and checkout) is disabled during the current phase.",
+      "return": "Return Home"
+    },
+    "notFound": {
+      "title": "404 Page Not Found",
+      "desc": "The page you are looking for doesn't exist or has been moved.",
+      "return": "Return to Home"
+    }
+  },
+  "seo": {
+    "defaultDescription": "Online courses, exams, and verified certificates — learn at your own pace.",
+    "home": {
+      "title": "Online Courses & Certificates"
+    }
+  }
+}

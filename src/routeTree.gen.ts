@@ -18,7 +18,10 @@ import { Route as CreatorApplicationRouteImport } from './routes/creator-applica
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ShippingDeliveryRouteImport } from './routes/shipping-delivery'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
 import { Route as CoursesIndexRouteImport } from './routes/courses/index'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses/$courseId'
 import { Route as CreatorsIndexRouteImport } from './routes/creators/index'
@@ -73,10 +76,25 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShippingDeliveryRoute = ShippingDeliveryRouteImport.update({
+  id: '/shipping-delivery',
+  path: '/shipping-delivery',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSignUpRoute = AuthSignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => AuthRoute,
 } as any)
 const CoursesIndexRoute = CoursesIndexRouteImport.update({
   id: '/courses/',
@@ -130,13 +148,16 @@ const AuthenticatedDashboardStudentRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
   '/creator-application': typeof CreatorApplicationRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/shipping-delivery': typeof ShippingDeliveryRoute
   '/terms': typeof TermsRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/sign-up': typeof AuthSignUpRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/creators/$username': typeof CreatorsUsernameRoute
   '/products/$productId': typeof ProductsProductIdRoute
@@ -150,13 +171,16 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
   '/creator-application': typeof CreatorApplicationRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/shipping-delivery': typeof ShippingDeliveryRoute
   '/terms': typeof TermsRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/sign-up': typeof AuthSignUpRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/creators/$username': typeof CreatorsUsernameRoute
   '/products/$productId': typeof ProductsProductIdRoute
@@ -172,13 +196,16 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
   '/creator-application': typeof CreatorApplicationRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/shipping-delivery': typeof ShippingDeliveryRoute
   '/terms': typeof TermsRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/sign-up': typeof AuthSignUpRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/creators/$username': typeof CreatorsUsernameRoute
   '/products/$productId': typeof ProductsProductIdRoute
@@ -200,7 +227,10 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/refund-policy'
     | '/reset-password'
+    | '/shipping-delivery'
     | '/terms'
+    | '/auth/login'
+    | '/auth/sign-up'
     | '/courses/$courseId'
     | '/creators/$username'
     | '/products/$productId'
@@ -220,7 +250,10 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/refund-policy'
     | '/reset-password'
+    | '/shipping-delivery'
     | '/terms'
+    | '/auth/login'
+    | '/auth/sign-up'
     | '/courses/$courseId'
     | '/creators/$username'
     | '/products/$productId'
@@ -241,7 +274,10 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/refund-policy'
     | '/reset-password'
+    | '/shipping-delivery'
     | '/terms'
+    | '/auth/login'
+    | '/auth/sign-up'
     | '/courses/$courseId'
     | '/creators/$username'
     | '/products/$productId'
@@ -257,12 +293,13 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   ContactRoute: typeof ContactRoute
   CreatorApplicationRoute: typeof CreatorApplicationRoute
   PrivacyRoute: typeof PrivacyRoute
   RefundPolicyRoute: typeof RefundPolicyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ShippingDeliveryRoute: typeof ShippingDeliveryRoute
   TermsRoute: typeof TermsRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   CreatorsUsernameRoute: typeof CreatorsUsernameRoute
@@ -337,12 +374,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shipping-delivery': {
+      id: '/shipping-delivery'
+      path: '/shipping-delivery'
+      fullPath: '/shipping-delivery'
+      preLoaderRoute: typeof ShippingDeliveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/sign-up': {
+      id: '/auth/sign-up'
+      path: '/sign-up'
+      fullPath: '/auth/sign-up'
+      preLoaderRoute: typeof AuthSignUpRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/courses/': {
       id: '/courses/'
@@ -425,16 +483,29 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthSignUpRoute: typeof AuthSignUpRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthLoginRoute: AuthLoginRoute,
+  AuthSignUpRoute: AuthSignUpRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   ContactRoute: ContactRoute,
   CreatorApplicationRoute: CreatorApplicationRoute,
   PrivacyRoute: PrivacyRoute,
   RefundPolicyRoute: RefundPolicyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ShippingDeliveryRoute: ShippingDeliveryRoute,
   TermsRoute: TermsRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
   CreatorsUsernameRoute: CreatorsUsernameRoute,
