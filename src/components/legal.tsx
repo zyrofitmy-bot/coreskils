@@ -14,7 +14,7 @@ function LegalPage({ title, children }: { title: string; children: ReactNode }) 
   );
 }
 
-function TermsPage() {
+export function TermsPage() {
   return (
     <LegalPage title="Terms of Service">
       <p>
@@ -55,7 +55,7 @@ function TermsPage() {
   );
 }
 
-function PrivacyPage() {
+export function PrivacyPage() {
   return (
     <LegalPage title="Privacy Policy">
       <p>
@@ -82,7 +82,7 @@ function PrivacyPage() {
   );
 }
 
-function RefundPage() {
+export function RefundPage() {
   return (
     <LegalPage title="Refund Policy">
       <p>
@@ -110,7 +110,7 @@ function RefundPage() {
   );
 }
 
-function ContactPage() {
+export function ContactPage() {
   return (
     <LegalPage title="Contact Us">
       <p>

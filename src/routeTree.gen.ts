@@ -10,14 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as CoursesIndexRouteImport } from './routes/courses/index'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses/$courseId'
+import { Route as CreatorsIndexRouteImport } from './routes/creators/index'
+import { Route as CreatorsUsernameRouteImport } from './routes/creators/$username'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products/$productId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoursesIndexRoute = CoursesIndexRouteImport.update({
@@ -28,6 +36,16 @@ const CoursesIndexRoute = CoursesIndexRouteImport.update({
 const CoursesCourseIdRoute = CoursesCourseIdRouteImport.update({
   id: '/courses/$courseId',
   path: '/courses/$courseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreatorsIndexRoute = CreatorsIndexRouteImport.update({
+  id: '/creators/',
+  path: '/creators/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreatorsUsernameRoute = CreatorsUsernameRouteImport.update({
+  id: '/creators/$username',
+  path: '/creators/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductsIndexRoute = ProductsIndexRouteImport.update({
@@ -43,55 +61,76 @@ const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
+  '/creators/$username': typeof CreatorsUsernameRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/courses/': typeof CoursesIndexRoute
+  '/creators/': typeof CreatorsIndexRoute
   '/products/': typeof ProductsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
+  '/creators/$username': typeof CreatorsUsernameRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/courses': typeof CoursesIndexRoute
+  '/creators': typeof CreatorsIndexRoute
   '/products': typeof ProductsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
+  '/creators/$username': typeof CreatorsUsernameRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/courses/': typeof CoursesIndexRoute
+  '/creators/': typeof CreatorsIndexRoute
   '/products/': typeof ProductsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/courses/$courseId'
+    | '/creators/$username'
     | '/products/$productId'
     | '/courses/'
+    | '/creators/'
     | '/products/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/courses/$courseId'
+    | '/creators/$username'
     | '/products/$productId'
     | '/courses'
+    | '/creators'
     | '/products'
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/courses/$courseId'
+    | '/creators/$username'
     | '/products/$productId'
     | '/courses/'
+    | '/creators/'
     | '/products/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
+  CreatorsUsernameRoute: typeof CreatorsUsernameRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
   CoursesIndexRoute: typeof CoursesIndexRoute
+  CreatorsIndexRoute: typeof CreatorsIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
 }
 
@@ -102,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/courses/': {
@@ -116,6 +162,20 @@ declare module '@tanstack/react-router' {
       path: '/courses/$courseId'
       fullPath: '/courses/$courseId'
       preLoaderRoute: typeof CoursesCourseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/creators/': {
+      id: '/creators/'
+      path: '/creators'
+      fullPath: '/creators/'
+      preLoaderRoute: typeof CreatorsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/creators/$username': {
+      id: '/creators/$username'
+      path: '/creators/$username'
+      fullPath: '/creators/$username'
+      preLoaderRoute: typeof CreatorsUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/products/': {
@@ -137,9 +197,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
+  CreatorsUsernameRoute: CreatorsUsernameRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
   CoursesIndexRoute: CoursesIndexRoute,
+  CreatorsIndexRoute: CreatorsIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
 }
 export const routeTree = rootRouteImport
