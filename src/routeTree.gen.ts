@@ -11,9 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CreatorApplicationRouteImport } from './routes/creator-application'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as CoursesIndexRouteImport } from './routes/courses/index'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses/$courseId'
@@ -32,9 +35,19 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreatorApplicationRoute = CreatorApplicationRouteImport.update({
+  id: '/creator-application',
+  path: '/creator-application',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -45,6 +58,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const RefundPolicyRoute = RefundPolicyRouteImport.update({
   id: '/refund-policy',
   path: '/refund-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -86,9 +104,12 @@ const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/creator-application': typeof CreatorApplicationRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/creators/$username': typeof CreatorsUsernameRoute
@@ -100,9 +121,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/creator-application': typeof CreatorApplicationRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/creators/$username': typeof CreatorsUsernameRoute
@@ -115,9 +139,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/creator-application': typeof CreatorApplicationRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/creators/$username': typeof CreatorsUsernameRoute
@@ -131,9 +158,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/auth'
     | '/contact'
+    | '/creator-application'
     | '/privacy'
     | '/refund-policy'
+    | '/reset-password'
     | '/terms'
     | '/courses/$courseId'
     | '/creators/$username'
@@ -145,9 +175,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/auth'
     | '/contact'
+    | '/creator-application'
     | '/privacy'
     | '/refund-policy'
+    | '/reset-password'
     | '/terms'
     | '/courses/$courseId'
     | '/creators/$username'
@@ -159,9 +192,12 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/auth'
     | '/contact'
+    | '/creator-application'
     | '/privacy'
     | '/refund-policy'
+    | '/reset-password'
     | '/terms'
     | '/courses/$courseId'
     | '/creators/$username'
@@ -174,9 +210,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
+  CreatorApplicationRoute: typeof CreatorApplicationRoute
   PrivacyRoute: typeof PrivacyRoute
   RefundPolicyRoute: typeof RefundPolicyRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   CreatorsUsernameRoute: typeof CreatorsUsernameRoute
@@ -202,11 +241,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/creator-application': {
+      id: '/creator-application'
+      path: '/creator-application'
+      fullPath: '/creator-application'
+      preLoaderRoute: typeof CreatorApplicationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -221,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/refund-policy'
       fullPath: '/refund-policy'
       preLoaderRoute: typeof RefundPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -278,9 +338,12 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
+  CreatorApplicationRoute: CreatorApplicationRoute,
   PrivacyRoute: PrivacyRoute,
   RefundPolicyRoute: RefundPolicyRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
   CreatorsUsernameRoute: CreatorsUsernameRoute,
