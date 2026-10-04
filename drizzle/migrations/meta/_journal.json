@@ -8,6 +8,13 @@
       "when": 1791109032896,
       "tag": "0000_coreskils_lms_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791109213716,
+      "tag": "0001_admin_read_policies",
+      "breakpoints": true
     }
   ]
 }
