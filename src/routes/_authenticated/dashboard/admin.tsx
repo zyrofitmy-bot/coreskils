@@ -57,7 +57,9 @@ function Categories() {
     return (
         <div className="rounded-xl border p-4 bg-card">
             <h1 className="font-bold text-xl mb-4">Categories</h1>
-            <CategoryFormDialog />
+            <CategoryFormDialog>
+                <button className="h-11 px-6 bg-primary text-white font-medium rounded-md text-[14px]">Add Category</button>
+            </CategoryFormDialog>
             {cats.map((c: any) => <div key={c.id} className="py-2">{c.name}</div>)}
         </div>
     );
