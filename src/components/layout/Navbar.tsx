@@ -29,11 +29,13 @@ export function Navbar() {
     getMyAccount().then((acc) => setRoles(acc.roles)).catch(() => {});
   }, [user]);
 
-  const dashboardPath = roles.includes("admin")
-    ? "/dashboard/admin"
-    : roles.includes("creator")
-      ? "/dashboard/creator"
-      : "/dashboard/student";
+  const dashboardPath = (
+    roles.includes("admin")
+      ? "/dashboard/admin"
+      : roles.includes("creator")
+        ? "/dashboard/creator"
+        : "/dashboard/student"
+  ) as "/dashboard/admin" | "/dashboard/creator" | "/dashboard/student";
 
   const links = [
     { to: "/courses", label: "Courses" },
