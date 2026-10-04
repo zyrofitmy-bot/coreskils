@@ -229,17 +229,17 @@ export const submitCreatorApplication = createServerFn({ method: "POST" })
     const { error } = await supabase.from("creator_applications").upsert({
       user_id: userId,
       display_name: data.displayName,
-      headline: data.headline,
-      bio: data.bio,
-      expertise: data.expertise,
+      headline: data.headline ?? null,
+      bio: data.bio ?? null,
+      expertise: data.expertise ?? null,
       experience_years: data.experienceYears,
-      portfolio_url: data.portfolioUrl,
-      linkedin_url: data.linkedinUrl,
-      website_url: data.websiteUrl,
+      portfolio_url: data.portfolioUrl ?? null,
+      linkedin_url: data.linkedinUrl ?? null,
+      website_url: data.websiteUrl ?? null,
       teaching_topics: data.teachingTopics,
-      course_proposal: data.courseProposal,
-      target_audience: data.targetAudience,
-      motivation: data.motivation,
+      course_proposal: data.courseProposal ?? null,
+      target_audience: data.targetAudience ?? null,
+      motivation: data.motivation ?? null,
       status: "pending",
     });
     if (error) throw new Error(error.message);
@@ -274,7 +274,7 @@ export const addReview = createServerFn({ method: "POST" })
       user_id: userId,
       course_id: data.courseId,
       rating: data.rating,
-      body: data.body,
+      body: data.body ?? null,
     });
     if (error) throw new Error(error.message);
     return { ok: true };
