@@ -201,7 +201,7 @@ export const saveCategory = createServerFn({ method: "POST" })
     } else {
       const { error } = await supabase
         .from("categories")
-        .insert({ name: data.name, slug: data.slug, description: data.description });
+        .insert({ name: data.name, slug: data.slug, description: data.description ?? null });
       if (error) throw new Error(error.message);
     }
     return { ok: true };

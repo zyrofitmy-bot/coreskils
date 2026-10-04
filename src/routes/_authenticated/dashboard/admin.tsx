@@ -185,7 +185,7 @@ function Applications() {
 function CatalogTable({ kind }: { kind: "courses" | "products" }) {
   const { data: rows = [] } = useQuery({
     queryKey: ["a-" + kind],
-    queryFn: () => (kind === "courses" ? getAdminCourses() : getAdminProducts()),
+    queryFn: async (): Promise<any[]> => (kind === "courses" ? getAdminCourses() : getAdminProducts()),
   });
   return (
     <div>

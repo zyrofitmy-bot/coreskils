@@ -307,7 +307,7 @@ function Products() {
   const { data: products = [] } = useQuery({ queryKey: ["c-products"], queryFn: () => getMyCreatorProducts() });
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: () => listCategories() });
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: "", shortSummary: "", description: "", categoryId: "", price: 0, coverImageUrl: "", accessPlan: "lifetime" as const, accessDays: "" });
+  const [form, setForm] = useState({ title: "", shortSummary: "", description: "", categoryId: "", price: 0, coverImageUrl: "", accessPlan: "lifetime" as "lifetime" | "fixed_days" | "monthly" | "yearly", accessDays: "" });
 
   async function create(e: React.FormEvent) {
     e.preventDefault();
@@ -349,7 +349,7 @@ function Products() {
               {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <input className={inputCls} type="number" min={0} placeholder="Price (₹)" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
-            <select className={inputCls} value={form.accessPlan} onChange={(e) => setForm({ ...form, accessPlan: e.target.value as any })}>
+            <select className={inputCls} value={form.accessPlan} onChange={(e) => setForm({ ...form, accessPlan: e.target.value as "lifetime" | "fixed_days" | "monthly" | "yearly" })}>
               <option value="lifetime">Lifetime access</option>
               <option value="fixed_days">Fixed days</option>
               <option value="monthly">Monthly</option>
