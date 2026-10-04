@@ -11,7 +11,7 @@ import {
   useListLiveClassAttendance,
   useGetCreatorCourseBuilder,
   LiveClass
-} from "@workspace/api-client-react";
+} from "@/lib/account.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,7 +36,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Clock, Edit2, MoreVertical, Plus, Trash, Video, XCircle, CheckCircle, Users, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
+import { Link } from "@tanstack/react-router";
 import { format, parseISO } from "date-fns";
 import { LessonVideoUpload } from "@/components/dashboard/LessonVideoUpload";
 
@@ -201,12 +201,12 @@ function LiveClassItem({ liveClass, productId, role, modules }: { liveClass: Liv
           </Button>
         )}
         {liveClass.status === 'scheduled' || liveClass.status === 'live' ? (
-          <Link href={`/dashboard/${role}/live-classes/${liveClass.id}/classroom`}>
+          <Link to={`/dashboard/${role}/live-classes/${liveClass.id}/classroom`}>
             <Button className={`h-9 px-4 rounded-md font-medium text-[13px] ${liveClass.status === 'live' ? 'bg-[#FE543D] hover:bg-red-600 text-white shadow-[0_4px_14px_rgba(254,84,61,0.25)]' : 'bg-primary hover:bg-[#10A364] text-white shadow-[0_4px_14px_rgba(21,207,116,0.25)]'}`} size="sm">
               <Video className="w-4 h-4 mr-2" />
               {liveClass.status === 'live' ? 'Join Class' : 'Enter Studio'}
             </Button>
-          </Link>
+           </Link>
         ) : liveClass.recordingUrl ? (
           <Button variant="outline" size="sm" className="border border-[#DADADA] text-[#394649] bg-white hover:bg-gray-50 h-9 px-4 rounded-md font-medium text-[13px]" asChild>
             <a href={liveClass.recordingUrl} target="_blank" rel="noopener noreferrer">View Recording</a>

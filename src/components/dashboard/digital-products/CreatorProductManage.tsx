@@ -19,7 +19,7 @@ export function CreatorProductManage({ productId }: { productId: string }) {
     <div className="max-w-4xl mx-auto py-8 space-y-8">
       <Link to="/dashboard/creator" className="flex items-center gap-1 text-[14px] text-[#4D4D4D] hover:text-primary">
         <ArrowLeft className="w-4 h-4" /> Back to Products
-      </Link>
+       </Link>
       <div className="rounded-xl border border-[#E5E5E5] bg-white p-8 shadow-sm space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-[28px] font-bold text-black">{product.title}</h1>

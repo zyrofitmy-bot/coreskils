@@ -1,5 +1,5 @@
-import { CourseBuilder } from "@/pages/dashboard/creator/CourseBuilder";
-import { useParams, Link } from "wouter";
+import { CourseBuilder } from "../creator/CourseBuilder";
+import { useParams, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 

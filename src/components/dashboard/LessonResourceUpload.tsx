@@ -4,7 +4,7 @@ import {
   useRemoveLessonAsset,
   getGetCreatorCourseBuilderQueryKey,
   getGetCreatorCourseReadinessQueryKey
-} from "@workspace/api-client-react";
+} from "@/lib/account.functions";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { FileText, Upload, Trash2, AlertCircle } from "lucide-react";

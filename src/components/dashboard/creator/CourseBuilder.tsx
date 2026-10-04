@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Link } from "wouter";
+import { Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetCreatorCourseBuilder,
@@ -21,7 +21,7 @@ import {
   useFinalizeCourseThumbnailUpload,
   getMarketplaceCoursesQueryKey,
   useListCategories
-} from "@workspace/api-client-react";
+} from "@/lib/account.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,9 +74,9 @@ export function CourseBuilder({
   return (
     <div className="mx-auto max-w-6xl min-w-0 space-y-5 pb-20 pt-2 sm:space-y-8 sm:pt-4">
       <div className="flex min-w-0 items-start gap-3 border-b border-[#E5E5E5] pb-5 sm:items-center sm:gap-4 sm:pb-6">
-        <Link href={backRoute} className="inline-flex items-center justify-center h-10 w-10 rounded-md border border-[#E5E5E5] bg-white hover:bg-gray-50 text-[#394649] transition-colors shadow-sm">
+        <Link to={backRoute} className="inline-flex items-center justify-center h-10 w-10 rounded-md border border-[#E5E5E5] bg-white hover:bg-gray-50 text-[#394649] transition-colors shadow-sm">
           <ArrowLeft className="w-5 h-5" />
-        </Link>
+         </Link>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-4">
             <h1 className="min-w-0 break-words text-[22px] font-bold leading-tight tracking-tight text-black sm:text-[28px] md:text-[32px]">{product.title}</h1>

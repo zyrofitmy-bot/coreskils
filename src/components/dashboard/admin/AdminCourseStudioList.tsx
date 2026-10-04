@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation } from "@tanstack/react-router";
 import { 
   useAdminCourseStudioCourses,
   useAdminCreators,
@@ -8,7 +8,7 @@ import {
   useCreateCreatorCourseModule,
   useCreateCreatorCourseLesson,
   AdminCourse
-} from "@workspace/api-client-react";
+} from "@/lib/account.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -113,9 +113,9 @@ function CourseCard({ course }: { course: AdminCourse }) {
 
       <div className="mt-4 pt-4 border-t border-[#E5E5E5] flex">
         {course.productId ? (
-          <Link href={`/dashboard/admin/courses/${course.productId}/studio`} className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-colors h-10 px-4 py-2 border border-[#DADADA] text-[#394649] bg-white hover:bg-gray-50 text-[14px]">
+          <Link to={`/dashboard/admin/courses/${course.productId}/studio`} className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-colors h-10 px-4 py-2 border border-[#DADADA] text-[#394649] bg-white hover:bg-gray-50 text-[14px]">
             Open Studio <ArrowRight className="w-4 h-4 ml-2" />
-          </Link>
+           </Link>
         ) : (
           <span className="w-full text-[13px] text-red-500 font-medium text-center">Linked course product is missing</span>
         )}

@@ -17,7 +17,7 @@ export function StudentProductView({ productId }: { productId: string }) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-xl font-bold text-black mb-2">Product not found</h2>
-        <Link to="/dashboard/student" className="text-primary hover:underline">Return to Library</Link>
+        <Link to="/dashboard/student" className="text-primary hover:underline">Return to Library </Link>
       </div>
     );
   }
@@ -25,7 +25,7 @@ export function StudentProductView({ productId }: { productId: string }) {
   return (
     <div className="max-w-4xl mx-auto py-8 space-y-8">
       <div className="flex items-center gap-4 text-[#4D4D4D] text-[14px]">
-        <Link to="/dashboard/student" className="hover:text-primary flex items-center gap-1"><ArrowLeft className="w-4 h-4" /> Back to Products</Link>
+        <Link to="/dashboard/student" className="hover:text-primary flex items-center gap-1"><ArrowLeft className="w-4 h-4" /> Back to Products </Link>
       </div>
 
       <div className="rounded-xl border border-[#E5E5E5] bg-white p-4 shadow-sm sm:p-8">
