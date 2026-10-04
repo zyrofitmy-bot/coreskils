@@ -51,7 +51,7 @@ export const saveCourse = createServerFn({ method: "POST" })
         .from("courses")
         .update({
           title: data.title,
-          description: data.description,
+          description: data.description ?? null,
           category_id: data.categoryId ?? null,
           level: data.level,
           price_minor: data.priceMinor,
@@ -71,7 +71,7 @@ export const saveCourse = createServerFn({ method: "POST" })
         creator_id: userId,
         title: data.title,
         slug,
-        description: data.description,
+        description: data.description ?? null,
         category_id: data.categoryId ?? null,
         level: data.level,
         price_minor: data.priceMinor,
@@ -210,8 +210,8 @@ export const addLesson = createServerFn({ method: "POST" })
     const { error } = await supabase.from("lessons").insert({
       module_id: data.moduleId,
       title: data.title,
-      description: data.description,
-      video_url: data.videoUrl,
+      description: data.description ?? null,
+      video_url: data.videoUrl ?? null,
       is_preview: data.isPreview,
       position: (max?.position ?? -1) + 1,
     });
@@ -238,8 +238,8 @@ export const updateLesson = createServerFn({ method: "POST" })
       .from("lessons")
       .update({
         title: data.title,
-        description: data.description,
-        video_url: data.videoUrl,
+        description: data.description ?? null,
+        video_url: data.videoUrl ?? null,
         is_preview: data.isPreview,
       })
       .eq("id", data.lessonId);
@@ -298,8 +298,8 @@ export const saveProduct = createServerFn({ method: "POST" })
     await requireCreator(supabase, userId);
     const payload = {
       title: data.title,
-      description: data.description,
-      short_summary: data.shortSummary,
+      description: data.description ?? null,
+      short_summary: data.shortSummary ?? null,
       category_id: data.categoryId ?? null,
       type: data.type,
       price_minor: data.priceMinor,
@@ -396,9 +396,9 @@ export const upsertCreatorProfile = createServerFn({ method: "POST" })
       display_name: data.displayName,
       username: slugify(data.username),
       headline: data.headline,
-      bio: data.bio,
-      website_url: data.websiteUrl,
-      avatar_url: data.avatarUrl,
+      bio: data.bio ?? null,
+      website_url: data.websiteUrl ?? null,
+      avatar_url: data.avatarUrl ?? null,
       updated_at: new Date().toISOString(),
     });
     if (error) throw new Error(error.message);

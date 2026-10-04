@@ -118,7 +118,7 @@ export const reviewApplication = createServerFn({ method: "POST" })
       .from("creator_applications")
       .update({
         status: data.approve ? "approved" : "rejected",
-        review_reason: data.reason,
+        review_reason: data.reason ?? null,
         reviewed_at: new Date().toISOString(),
         reviewed_by: userId,
       })
@@ -194,7 +194,7 @@ export const saveCategory = createServerFn({ method: "POST" })
         .update({
           name: data.name,
           slug: data.slug,
-          description: data.description,
+          description: data.description ?? null,
         })
         .eq("id", data.id);
       if (error) throw new Error(error.message);
