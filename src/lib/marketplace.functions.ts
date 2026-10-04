@@ -97,12 +97,13 @@ export const getProduct = createServerFn({ method: "GET" })
   .inputValidator((d) => z.object({ id: z.string() }).parse(d))
   .handler(async ({ data }) => {
     const sb = publicClient();
-    const { data: product } = await sb
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.id);
+    let query = sb
       .from("products")
       .select("*, categories(name, slug)")
-      .or(`id.eq.${data.id},public_slug.eq.${data.id}`)
-      .eq("status", "published")
-      .maybeSingle();
+      .eq("status", "published");
+    query = isUuid ? query.or(`id.eq.${data.id},public_slug.eq.${data.id}`) : query.eq("public_slug", data.id);
+    const { data: product } = await query.maybeSingle();
     if (!product) return null;
     const { data: creator } = await sb
       .from("creator_profiles")
