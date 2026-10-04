@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
   ArrowLeft, CheckCircle2, ListVideo, Plus, Settings, Video, FileText,
-  Trash, Edit2, Check, AlertCircle, PlayCircle, ChevronDown, ChevronUp, GripVertical
+  Trash, Edit2, Check, AlertCircle, PlayCircle, ChevronDown, ChevronUp, GripVertical, MoreVertical
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -43,7 +43,7 @@ export function CourseBuilder({
 
   const { data: builder, isLoading, error } = useQuery({ 
     queryKey: ["creatorCourseBuilder", productId], 
-    queryFn: () => getCourseBuilder({ courseId: String(productId) }) 
+    queryFn: () => getCourseBuilder({ data: { courseId: String(productId) } }) 
   });
   const readiness = { ready: true }; // TODO(phase2): Implement readiness check
 
@@ -55,7 +55,9 @@ export function CourseBuilder({
     return <div className="p-20 text-center text-destructive">Failed to load course builder.</div>;
   }
 
-  const { product, course, modules } = builder;
+  const product = builder as any;
+  const course = builder as any;
+  const modules: any[] = (builder as any).modules ?? [];
 
   return (
     <div className="mx-auto max-w-6xl min-w-0 space-y-5 pb-20 pt-2 sm:space-y-8 sm:pt-4">
@@ -210,7 +212,7 @@ function BasicsTab({ productId, product, course }: { productId: number, product:
   const addFaq = () => setFaqs([...faqs, { question: "", answer: "" }]);
   const updateFaq = (index: number, field: "question" | "answer", val: string) => {
     const newFaqs = [...faqs];
-    newFaqs[index] = { ...newFaqs[index], [field]: val };
+    newFaqs[index] = { question: "", answer: "", ...newFaqs[index], [field]: val };
     setFaqs(newFaqs);
   };
   const removeFaq = (index: number) => {
@@ -444,9 +446,9 @@ function BasicsTab({ productId, product, course }: { productId: number, product:
 function CurriculumTab({ productId, modules }: { productId: number, modules: any[] }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const addModuleMutation = useMutation({ mutationFn: (title: string) => addModule({ courseId: String(productId), title }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] }) });
-  const renameModuleMutation = useMutation({ mutationFn: (args: { moduleId: number, title: string }) => renameModule({ moduleId: String(args.moduleId), title: args.title }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] }) });
-  const deleteModuleMutation = useMutation({ mutationFn: (moduleId: number) => deleteModuleFn({ moduleId: String(moduleId) }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] }) });
+  const addModuleMutation = useMutation({ mutationFn: (title: string) => addModule({ data: { courseId: String(productId), title } }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] }) });
+  const renameModuleMutation = useMutation({ mutationFn: (args: { moduleId: number, title: string }) => renameModule({ data: { moduleId: String(args.moduleId), title: args.title } }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] }) });
+  const deleteModuleMutation = useMutation({ mutationFn: (moduleId: number) => deleteModuleFn({ data: { moduleId: String(moduleId) } }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] }) });
   
   const [newModuleTitle, setNewModuleTitle] = useState("");
   const [isAddingModule, setIsAddingModule] = useState(false);
@@ -496,7 +498,7 @@ function CurriculumTab({ productId, modules }: { productId: number, modules: any
             module={module} 
             productId={productId} 
             index={idx}
-            onRename={(title) => renameModuleMutation.mutate({ moduleId: module.id, title })}
+            onRename={(title: string) => renameModuleMutation.mutate({ moduleId: module.id, title })}
             onDelete={() => deleteModuleMutation.mutate(module.id)}
           />
         ))}
@@ -523,7 +525,7 @@ function ModuleItem({ module, productId, index, onRename, onDelete }: any) {
   const queryClient = useQueryClient();
 
   const addLessonMutation = useMutation({ 
-    mutationFn: (title: string) => addLesson({ moduleId: String(module.id), title, isPreview: false }),
+    mutationFn: (title: string) => addLesson({ data: { moduleId: String(module.id), title, isPreview: false } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] })
   });
 
@@ -637,12 +639,12 @@ function LessonItem({ lesson, productId, index }: any) {
   const queryClient = useQueryClient();
 
   const updateLessonMutation = useMutation({ 
-    mutationFn: (data: any) => updateLesson({ lessonId: String(lesson.id), ...data }),
+    mutationFn: (data: any) => updateLesson({ data: { lessonId: String(lesson.id), ...data } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] })
   });
 
   const deleteLessonMutation = useMutation({ 
-    mutationFn: () => deleteLessonFn({ lessonId: String(lesson.id) }),
+    mutationFn: () => deleteLessonFn({ data: { lessonId: String(lesson.id) } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] })
   });
 
@@ -722,7 +724,7 @@ function PublishTab({ productId, product, readiness }: { productId: number, prod
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const setStatusMutation = useMutation({ 
-    mutationFn: (status: string) => setCourseStatus({ courseId: String(productId), status }),
+    mutationFn: (status: string) => setCourseStatus({ data: { courseId: String(productId), status } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] });
       toast({ title: "Status updated" });

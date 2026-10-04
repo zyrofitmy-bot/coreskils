@@ -244,8 +244,8 @@ function AICourseForm({ creatorId, onSuccess }: { creatorId: number, onSuccess: 
   
   const generateOutline = { mutate: (args: any, options?: any) => { console.log("AI Outline TODO(phase2)"); options?.onError?.(new Error("AI Outline TODO(phase2)")); }, isPending: false } as any;
   const createCourse = { mutate: (args: any, options?: any) => { console.log("Create course TODO(phase2)"); options?.onError?.(new Error("Manual creation TODO(phase2)")); }, mutateAsync: async (args: any) => { throw new Error("Manual creation TODO(phase2)"); }, isPending: false } as any;
-  const createModule = useMutation({ mutationFn: (args: { title: string, courseId: string }) => addModule(args) });
-  const createLesson = useMutation({ mutationFn: (args: { title: string, moduleId: string, isPreview: boolean }) => addLesson(args) });
+  const createModule = useMutation({ mutationFn: (args: { title: string, courseId: string }) => addModule({ data: args }) });
+  const createLesson = useMutation({ mutationFn: (args: { title: string, moduleId: string, isPreview: boolean }) => addLesson({ data: args }) });
 
   const [topic, setTopic] = useState("");
   const [audience, setAudience] = useState("Beginners");
@@ -384,7 +384,7 @@ function AICourseForm({ creatorId, onSuccess }: { creatorId: number, onSuccess: 
     <form onSubmit={handleGenerate} className="space-y-6">
       <div className="space-y-2">
         <Label className="text-[14px] font-bold text-[#394649]">What do you want to teach?</Label>
-        <Input required topic={topic} onChange={(e: any) => setTopic(e.target.value)} placeholder="e.g. Building Scalable Web Apps with React & Node" className="h-12 border-[#E5E5E5] rounded-md text-[15px]" />
+        <Input required value={topic} onChange={(e: any) => setTopic(e.target.value)} placeholder="e.g. Building Scalable Web Apps with React & Node" className="h-12 border-[#E5E5E5] rounded-md text-[15px]" />
       </div>
 
       <div className="grid grid-cols-2 gap-5">

@@ -331,7 +331,7 @@ function Products({ onOpenProduct }: { onOpenProduct: (id: string) => void }) {
                 </div>
                  <h3 className="font-bold text-[16px] text-black leading-snug line-clamp-2">{item.products?.title}</h3>
                 <div className="mt-4 pt-4 border-t border-[#E5E5E5]">
-                   <button onClick={() => openProduct(item.products?.id)} className="w-full border border-[#DADADA] text-[#394649] bg-white hover:bg-gray-50 h-10 rounded-md font-medium text-[14px] inline-flex items-center justify-center">View Content</button>
+                   <button onClick={() => onOpenProduct(item.products?.id)} className="w-full border border-[#DADADA] text-[#394649] bg-white hover:bg-gray-50 h-10 rounded-md font-medium text-[14px] inline-flex items-center justify-center">View Content</button>
                 </div>
              </div>
           ))}
