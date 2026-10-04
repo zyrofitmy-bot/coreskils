@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -24,10 +25,15 @@ import { Route as CreatorsIndexRouteImport } from './routes/creators/index'
 import { Route as CreatorsUsernameRouteImport } from './routes/creators/$username'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products/$productId'
+import { Route as AuthenticatedDashboardStudentRouteImport } from './routes/_authenticated/dashboard/student'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -100,6 +106,12 @@ const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
   path: '/products/$productId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDashboardStudentRoute =
+  AuthenticatedDashboardStudentRouteImport.update({
+    id: '/dashboard/student',
+    path: '/dashboard/student',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -117,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/courses/': typeof CoursesIndexRoute
   '/creators/': typeof CreatorsIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/dashboard/student': typeof AuthenticatedDashboardStudentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -134,10 +147,12 @@ export interface FileRoutesByTo {
   '/courses': typeof CoursesIndexRoute
   '/creators': typeof CreatorsIndexRoute
   '/products': typeof ProductsIndexRoute
+  '/dashboard/student': typeof AuthenticatedDashboardStudentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
@@ -152,6 +167,7 @@ export interface FileRoutesById {
   '/courses/': typeof CoursesIndexRoute
   '/creators/': typeof CreatorsIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/_authenticated/dashboard/student': typeof AuthenticatedDashboardStudentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -171,6 +187,7 @@ export interface FileRouteTypes {
     | '/courses/'
     | '/creators/'
     | '/products/'
+    | '/dashboard/student'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -188,9 +205,11 @@ export interface FileRouteTypes {
     | '/courses'
     | '/creators'
     | '/products'
+    | '/dashboard/student'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/about'
     | '/auth'
     | '/contact'
@@ -205,10 +224,12 @@ export interface FileRouteTypes {
     | '/courses/'
     | '/creators/'
     | '/products/'
+    | '/_authenticated/dashboard/student'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
@@ -232,6 +253,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -332,11 +360,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/dashboard/student': {
+      id: '/_authenticated/dashboard/student'
+      path: '/dashboard/student'
+      fullPath: '/dashboard/student'
+      preLoaderRoute: typeof AuthenticatedDashboardStudentRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardStudentRoute: typeof AuthenticatedDashboardStudentRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardStudentRoute: AuthenticatedDashboardStudentRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
