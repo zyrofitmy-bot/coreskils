@@ -1,14 +1,11 @@
 import { useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { 
-  useAdminCourseStudioCourses,
-  useAdminCreators,
-  useAdminCreateCourse,
-  useAdminCourseOutline,
-  useCreateCreatorCourseModule,
-  useCreateCreatorCourseLesson,
-  AdminCourse
-} from "@/lib/account.functions";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getAdminCourses, getAdminUsers } from "@/lib/admin.functions";
+import { addModule, addLesson, saveCourse } from "@/lib/creator.functions";
+
+type AdminCourse = any;
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,10 +19,10 @@ import { Plus, Search, Sparkles, BookOpen, Users, ArrowRight, Loader2, PlayCircl
 import { useToast } from "@/hooks/use-toast";
 
 export function AdminCourseStudioList() {
-  const { data: courses, isLoading, error } = useAdminCourseStudioCourses();
+  const { data: courses, isLoading, error } = useQuery({ queryKey: ["adminCourses"], queryFn: () => getAdminCourses().then(data => data.map((c: any) => ({ ...c, creatorName: c.profiles?.name || c.profiles?.email || "Unknown", moduleCount: 0, lessonCount: 0, productId: c.id }))) });
   const [search, setSearch] = useState("");
   
-  const filtered = courses?.filter(c => 
+  const filtered = courses?.filter((c: any) => 
     c.title.toLowerCase().includes(search.toLowerCase()) || 
     c.creatorName.toLowerCase().includes(search.toLowerCase())
   );
@@ -71,7 +68,7 @@ export function AdminCourseStudioList() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered?.map((course) => (
+          {filtered?.map((course: any) => (
             <CourseCard key={course.id} course={course} />
           ))}
         </div>
@@ -127,7 +124,7 @@ function CourseCard({ course }: { course: AdminCourse }) {
 function CreateCourseDialog() {
   const [open, setOpen] = useState(false);
   const [creatorId, setCreatorId] = useState("");
-  const { data: creators, isLoading: creatorsLoading } = useAdminCreators();
+  const { data: creators, isLoading: creatorsLoading } = useQuery({ queryKey: ["adminCreators"], queryFn: () => getAdminUsers().then(users => users.filter((u: any) => u.roles.includes("creator")).map((u: any) => ({ id: u.id, name: u.name || u.email, email: u.email }))) });
   
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -194,8 +191,8 @@ function ManualCourseForm({ creatorId, onSuccess }: { creatorId: number, onSucce
   const [description, setDescription] = useState("");
   const [priceMinor, setPriceMinor] = useState(0);
   
-  const createCourse = useAdminCreateCourse();
-  const [, setLocation] = useLocation();
+  const createCourse = { mutate: (args: any, options?: any) => { console.log("Create course TODO(phase2)"); options?.onError?.(new Error("Manual creation TODO(phase2)")); }, mutateAsync: async (args: any) => { throw new Error("Manual creation TODO(phase2)"); }, isPending: false } as any;
+  const navigate = (to: string) => { window.location.href = to; };
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -205,11 +202,11 @@ function ManualCourseForm({ creatorId, onSuccess }: { creatorId: number, onSucce
     createCourse.mutate({
       data: { creatorId, title, description, priceMinor: Number(priceMinor), currency: "USD" }
     }, {
-      onSuccess: (res) => {
+      onSuccess: (res: any) => {
         toast({ title: "Course created successfully" });
         onSuccess();
         if (res.productId) {
-          setLocation(`/dashboard/admin/courses/${res.productId}/studio`);
+          navigate(`/dashboard/admin/courses/${res.productId}/studio`);
         }
       },
       onError: (err: Error) => {
@@ -244,12 +241,12 @@ function ManualCourseForm({ creatorId, onSuccess }: { creatorId: number, onSucce
 
 function AICourseForm({ creatorId, onSuccess }: { creatorId: number, onSuccess: () => void }) {
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const navigate = (to: string) => { window.location.href = to; };
   
-  const generateOutline = useAdminCourseOutline();
-  const createCourse = useAdminCreateCourse();
-  const createModule = useCreateCreatorCourseModule();
-  const createLesson = useCreateCreatorCourseLesson();
+  const generateOutline = { mutate: (args: any, options?: any) => { console.log("AI Outline TODO(phase2)"); options?.onError?.(new Error("AI Outline TODO(phase2)")); }, isPending: false } as any;
+  const createCourse = { mutate: (args: any, options?: any) => { console.log("Create course TODO(phase2)"); options?.onError?.(new Error("Manual creation TODO(phase2)")); }, mutateAsync: async (args: any) => { throw new Error("Manual creation TODO(phase2)"); }, isPending: false } as any;
+  const createModule = useMutation({ mutationFn: (args: { productId: string | number, data: { title: string } }) => addModule({ courseId: String(args.productId), title: args.data.title }) });
+  const createLesson = useMutation({ mutationFn: (args: { moduleId: string | number, data: any }) => addLesson({ moduleId: String(args.moduleId), ...args.data }) });
 
   const [topic, setTopic] = useState("");
   const [audience, setAudience] = useState("Beginners");
@@ -266,7 +263,7 @@ function AICourseForm({ creatorId, onSuccess }: { creatorId: number, onSuccess: 
     generateOutline.mutate({
       data: { topic, audience, level, sectionCount: sectionCount[0] }
     }, {
-      onSuccess: (res) => {
+      onSuccess: (res: any) => {
         setDraft(res);
       },
       onError: (err: Error) => {
@@ -312,7 +309,7 @@ function AICourseForm({ creatorId, onSuccess }: { creatorId: number, onSuccess: 
       
       toast({ title: "AI Course built successfully!" });
       onSuccess();
-      setLocation(`/dashboard/admin/courses/${productId}/studio`);
+      navigate(`/dashboard/admin/courses/${productId}/studio`);
       
     } catch (err: any) {
       toast({ title: "Failed to apply AI draft", description: err.message, variant: "destructive" });
