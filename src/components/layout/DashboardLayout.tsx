@@ -1,140 +1,161 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
-import {
-  LayoutDashboard,
-  BookOpen,
+import { ReactNode, useState } from "react";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { 
+  LayoutDashboard, 
+  BookOpen, 
+  Settings, 
+  LogOut, 
+  CreditCard,
+  Award,
+  Users,
   Package,
   ShoppingCart,
   Heart,
-  BarChart3,
-  Users,
-  FileCheck,
-  FolderTree,
+  BarChart,
+  Globe,
+  Video,
   Menu,
   X,
-  LogOut,
-  GraduationCap,
-  UserRound,
+  ShieldCheck,
+  UserRound
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import logoHorizontal from "@/assets/logo-horizontal.svg.asset.json";
+import { Button } from "@/components/ui/button";
+import { logout, useGetSession } from "@/lib/use-session";
 
-export type DashSection = { id: string; label: string; icon: any };
-
-const studentSections: DashSection[] = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "library", label: "My Learning", icon: BookOpen },
-  { id: "products", label: "My Products", icon: Package },
-  { id: "orders", label: "Orders", icon: ShoppingCart },
-  { id: "wishlist", label: "Wishlist", icon: Heart },
-];
-
-const creatorSections: DashSection[] = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "courses", label: "Courses", icon: BookOpen },
-  { id: "products", label: "Products", icon: Package },
-  { id: "sales", label: "Sales", icon: BarChart3 },
-  { id: "profile", label: "Profile", icon: UserRound },
-];
-
-const adminSections: DashSection[] = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "users", label: "Users", icon: Users },
-  { id: "applications", label: "Applications", icon: FileCheck },
-  { id: "courses", label: "Courses", icon: BookOpen },
-  { id: "products", label: "Products", icon: Package },
-  { id: "orders", label: "Orders", icon: ShoppingCart },
-  { id: "categories", label: "Categories", icon: FolderTree },
-];
-
-export function DashboardLayout({
-  role,
-  active,
-  onNavigate,
-  children,
-}: {
-  role: "student" | "creator" | "admin";
-  active: string;
-  onNavigate: (section: string) => void;
-  children: ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
+export function DashboardLayout({ children, role, active, onNavigate }: { children: ReactNode, role: 'student' | 'creator' | 'admin', active?: string, onNavigate?: (section: string) => void }) {
+  const { pathname: location } = useLocation();
   const navigate = useNavigate();
-  const sections =
-    role === "admin"
-      ? adminSections
-      : role === "creator"
-        ? creatorSections
-        : studentSections;
+  const queryClient = useQueryClient();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const sidebar = (
-    <div className="flex h-full flex-col">
-      <Link to="/" className="px-6 py-5">
-        <img src={logoHorizontal.url} alt="CoreSkils" className="h-8 w-auto" />
-      </Link>
-      <nav className="flex-1 space-y-1 px-3">
-        {sections.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => {
-              onNavigate(s.id);
-              setOpen(false);
-            }}
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-              active === s.id
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-foreground"
-            }`}
-          >
-            <s.icon className="size-4" />
-            {s.label}
-          </button>
-        ))}
-      </nav>
-      <div className="space-y-1 border-t border-border p-3">
-        <Link
-          to="/"
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
-          <GraduationCap className="size-4" /> Back to site
-        </Link>
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut();
-            navigate({ to: "/" });
-          }}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
-          <LogOut className="size-4" /> Sign out
-        </button>
-      </div>
-    </div>
-  );
+  const getLinks = () => {
+    switch (role) {
+      case 'student':
+        return [
+          { href: `/dashboard/student`, label: "Dashboard", icon: LayoutDashboard },
+          { href: `/courses`, label: "Browse Courses", icon: Globe },
+          { href: `/dashboard/student/library`, label: "My Learning", icon: BookOpen },
+          { href: `/dashboard/student/live-classes`, label: "Live Classes", icon: Video },
+          { href: `/dashboard/student/products`, label: "Purchased Products", icon: Package },
+          { href: `/dashboard/student/orders`, label: "Orders", icon: ShoppingCart },
+          { href: `/dashboard/student/wishlist`, label: "Wishlist", icon: Heart },
+        ];
+      case 'creator':
+        return [
+          { href: `/dashboard/creator`, label: "Dashboard", icon: LayoutDashboard },
+          { href: `/dashboard/creator/courses`, label: "Courses", icon: BookOpen },
+          { href: `/dashboard/creator/live-classes`, label: "Live Classes", icon: Video },
+          { href: `/dashboard/creator/products`, label: "Digital Products", icon: Package },
+          { href: `/dashboard/creator/sales`, label: "Sales & Analytics", icon: BarChart },
+          { href: `/dashboard/creator/profile`, label: "Profile", icon: UserRound },
+        ];
+      case 'admin':
+        return [
+          { href: `/dashboard/admin`, label: "Dashboard", icon: LayoutDashboard },
+          { href: `/dashboard/admin/users`, label: "Users", icon: Users },
+          { href: `/dashboard/admin/creators`, label: "Creators", icon: Award },
+           { href: `/dashboard/admin/applications`, label: "Applications", icon: ShieldCheck },
+          { href: `/dashboard/admin/courses`, label: "Courses", icon: BookOpen },
+          { href: `/dashboard/admin/live-classes`, label: "Live Classes", icon: Video },
+          { href: `/dashboard/admin/products`, label: "Products", icon: Package },
+          { href: `/dashboard/admin/orders`, label: "Orders", icon: ShoppingCart },
+          { href: `/dashboard/admin/categories`, label: "Categories", icon: Globe },
+          { href: `/dashboard/admin/settings`, label: "Settings", icon: Settings },
+        ];
+    }
+  };
+
+  const links = getLinks();
+  const { data: session } = useGetSession();
+  const userName = session?.user?.name || "User";
+  const userInitial = userName.charAt(0).toUpperCase();
 
   return (
-    <div className="flex min-h-screen bg-muted/40">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-border bg-card md:block">
-        {sidebar}
-      </aside>
-      {open && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div
-            className="absolute inset-0 bg-foreground/40"
-            onClick={() => setOpen(false)}
-          />
-          <aside className="absolute inset-y-0 left-0 w-64 bg-card shadow-xl">
-            {sidebar}
-          </aside>
-        </div>
+    <div className="min-h-screen flex bg-[#FAFAFA]">
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
       )}
-      <div className="flex-1 md:ml-64">
-        <div className="flex items-center gap-3 border-b border-border bg-card px-4 py-3 md:hidden">
-          <button onClick={() => setOpen(true)} aria-label="Open menu">
-            <Menu className="size-6" />
+
+      {/* Sidebar */}
+      <aside className={`w-64 border-r border-[#E5E5E5] bg-white flex flex-col fixed inset-y-0 z-40 md:z-10 transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+        <div className="h-20 flex items-center justify-between px-6 border-b border-[#E5E5E5]">
+          <Link to="/" className="flex items-center gap-2">
+            <img src="/brand/logo-mark.svg" alt="CoreSkils" className="w-8 h-8" />
+            <span className="font-bold text-[18px] text-black tracking-tight">CoreSkils {role === 'creator' ? 'Creator' : role === 'admin' ? 'Admin' : 'Student'}</span>
+          </Link>
+          <button className="md:hidden text-[#394649] p-2" onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu">
+            <X className="w-6 h-6" />
           </button>
-          <span className="text-sm font-semibold capitalize">{role} dashboard</span>
         </div>
-        <main className="p-6 md:p-8">{children}</main>
+        
+        <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+          {links.map((link) => {
+            const section = link.href === `/dashboard/${role}` ? "overview" : link.href.slice(`/dashboard/${role}/`.length);
+            const isActive = active !== undefined
+              ? active === section
+              : location === link.href || (link.href !== `/dashboard/${role}` && location.startsWith(link.href + '/'));
+            return (
+              <Link key={link.href} to={link.href} onClick={(e) => { setIsMobileMenuOpen(false); if (onNavigate) { e.preventDefault(); onNavigate(section); } }}>
+                <div className={`relative flex items-center gap-3 px-3 py-3 rounded-md text-[15px] font-medium transition-all cursor-pointer mb-1 ${
+                  isActive 
+                    ? "bg-[#E3F9EF] text-primary" 
+                    : "text-[#394649] hover:bg-gray-50 hover:text-primary"
+                }`}>
+                  {isActive && <div className="absolute left-0 w-1 h-6 bg-primary rounded-r-full" />}
+                  <link.icon className="w-[20px] h-[20px]" />
+                  {link.label}
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+
+        <div className="p-4 border-t border-[#E5E5E5] space-y-2 bg-white">
+          <button
+            type="button"
+            onClick={async () => {
+              await logout();
+              queryClient.invalidateQueries();
+              navigate({ to: "/auth/login" as any });
+            }}
+            className="w-full text-left"
+            data-testid="button-logout"
+          >
+            <div className="flex items-center gap-3 px-3 py-3 rounded-md text-[14px] font-medium text-[#E53E3E] hover:bg-red-50 transition-colors cursor-pointer">
+              <LogOut className="w-[18px] h-[18px]" />
+              Log out
+            </div>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col md:pl-64 min-w-0 transition-all duration-300">
+        <header className="h-20 border-b border-[#E5E5E5] bg-white flex items-center justify-between px-4 md:px-8 sticky top-0 z-20 min-w-0">
+          <div className="flex items-center gap-4 min-w-0">
+            <button className="md:hidden text-[#394649] p-2 shrink-0" onClick={() => setIsMobileMenuOpen(true)} aria-label="Open menu" aria-expanded={isMobileMenuOpen}>
+              <Menu className="w-6 h-6" />
+            </button>
+            <h1 className="font-bold text-[20px] capitalize text-black hidden sm:block truncate">{role} Portal</h1>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="hidden sm:block text-[14px] font-medium text-[#394649] truncate max-w-[150px]">{userName}</span>
+            <div
+              className="w-10 h-10 shrink-0 bg-primary rounded-full flex items-center justify-center text-white font-bold text-[14px] shadow-[0_4px_10px_rgba(21,207,116,0.2)]"
+              aria-hidden="true"
+            >
+              {userInitial}
+            </div>
+          </div>
+        </header>
+        <main className="flex-1 p-4 md:p-6 lg:p-8 min-w-0 overflow-x-hidden">
+          {children}
+        </main>
       </div>
     </div>
   );
