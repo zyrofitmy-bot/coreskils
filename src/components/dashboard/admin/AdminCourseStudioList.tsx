@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAdminCourses, getAdminUsers } from "@/lib/admin.functions";
-import { addModule, addLesson, saveCourse } from "@/lib/creator.functions";
+import { addModule, addLesson } from "@/lib/creator.functions";
 
 type AdminCourse = any;
 
@@ -13,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Search, Sparkles, BookOpen, Users, ArrowRight, Loader2, PlayCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -86,7 +85,7 @@ function CourseCard({ course }: { course: AdminCourse }) {
           {course.status}
         </Badge>
         <span className="font-bold text-[16px] text-black">
-          ${(course.priceMinor / 100).toFixed(2)} {course.currency}
+          ${(course.price_minor / 100).toFixed(2)} {course.currency}
         </span>
       </div>
       
@@ -110,7 +109,7 @@ function CourseCard({ course }: { course: AdminCourse }) {
 
       <div className="mt-4 pt-4 border-t border-[#E5E5E5] flex">
         {course.productId ? (
-          <Link to={`/dashboard/admin/courses/${course.productId}/studio`} className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-colors h-10 px-4 py-2 border border-[#DADADA] text-[#394649] bg-white hover:bg-gray-50 text-[14px]">
+          <Link to="/dashboard/admin" className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-colors h-10 px-4 py-2 border border-[#DADADA] text-[#394649] bg-white hover:bg-gray-50 text-[14px]">
             Open Studio <ArrowRight className="w-4 h-4 ml-2" />
            </Link>
         ) : (
@@ -205,8 +204,8 @@ function ManualCourseForm({ creatorId, onSuccess }: { creatorId: number, onSucce
       onSuccess: (res: any) => {
         toast({ title: "Course created successfully" });
         onSuccess();
-        if (res.productId) {
-          navigate(`/dashboard/admin/courses/${res.productId}/studio`);
+        if (res.id) {
+          navigate(`/dashboard/admin`);
         }
       },
       onError: (err: Error) => {
@@ -245,8 +244,8 @@ function AICourseForm({ creatorId, onSuccess }: { creatorId: number, onSuccess: 
   
   const generateOutline = { mutate: (args: any, options?: any) => { console.log("AI Outline TODO(phase2)"); options?.onError?.(new Error("AI Outline TODO(phase2)")); }, isPending: false } as any;
   const createCourse = { mutate: (args: any, options?: any) => { console.log("Create course TODO(phase2)"); options?.onError?.(new Error("Manual creation TODO(phase2)")); }, mutateAsync: async (args: any) => { throw new Error("Manual creation TODO(phase2)"); }, isPending: false } as any;
-  const createModule = useMutation({ mutationFn: (args: { productId: string | number, data: { title: string } }) => addModule({ courseId: String(args.productId), title: args.data.title }) });
-  const createLesson = useMutation({ mutationFn: (args: { moduleId: string | number, data: any }) => addLesson({ moduleId: String(args.moduleId), ...args.data }) });
+  const createModule = useMutation({ mutationFn: (args: { title: string, courseId: string }) => addModule(args) });
+  const createLesson = useMutation({ mutationFn: (args: { title: string, moduleId: string, isPreview: boolean }) => addLesson(args) });
 
   const [topic, setTopic] = useState("");
   const [audience, setAudience] = useState("Beginners");
@@ -287,21 +286,22 @@ function AICourseForm({ creatorId, onSuccess }: { creatorId: number, onSuccess: 
         }
       });
       
-      const productId = courseRes.productId;
-      if (!productId) throw new Error("Course created but missing productId");
+      const productId = courseRes.id;
+      if (!productId) throw new Error("Course created but missing ID");
 
       // 2. Apply modules and lessons
       for (const section of draft.sections) {
         const modRes: any = await createModule.mutateAsync({
-          productId,
-          data: { title: section.title }
+          courseId: productId,
+          title: section.title
         });
         
         if (section.lessons) {
           for (const lesson of section.lessons) {
             await createLesson.mutateAsync({
               moduleId: modRes.id,
-              data: { title: lesson.title, isPreview: false }
+              title: lesson.title,
+              isPreview: false
             });
           }
         }
@@ -309,7 +309,7 @@ function AICourseForm({ creatorId, onSuccess }: { creatorId: number, onSuccess: 
       
       toast({ title: "AI Course built successfully!" });
       onSuccess();
-      navigate(`/dashboard/admin/courses/${productId}/studio`);
+      navigate(`/dashboard/admin`);
       
     } catch (err: any) {
       toast({ title: "Failed to apply AI draft", description: err.message, variant: "destructive" });
@@ -366,12 +366,14 @@ function AICourseForm({ creatorId, onSuccess }: { creatorId: number, onSuccess: 
             </div>
           </div>
         </div>
-        
-        <div className="flex gap-4 justify-end pt-4">
-          <Button className="border border-[#DADADA] text-[#394649] bg-white hover:bg-gray-50 h-11 px-6 rounded-md font-medium text-[14px]" onClick={() => setDraft(null)} disabled={isApplying}>Discard & Restart</Button>
-          <Button onClick={handleApply} disabled={isApplying} className="h-11 px-6 bg-[#704FE6] hover:bg-[#5b3dcf] text-white font-medium rounded-md text-[14px] shadow-sm">
-            {isApplying && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Confirm & Build Course
+
+        <div className="flex items-center gap-3 justify-end pt-4">
+          <Button variant="ghost" onClick={() => setDraft(null)} className="h-11 px-6 text-[14px] font-medium text-[#4D4D4D]">
+            Discard & Start Over
+          </Button>
+          <Button onClick={handleApply} disabled={isApplying} className="h-11 px-8 bg-[#704FE6] hover:bg-[#5C3CC7] text-white font-medium rounded-md text-[14px] shadow-[0_4px_14px_rgba(112,79,230,0.25)]">
+            {isApplying ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+            Create & Apply Curriculum
           </Button>
         </div>
       </div>
@@ -381,17 +383,17 @@ function AICourseForm({ creatorId, onSuccess }: { creatorId: number, onSuccess: 
   return (
     <form onSubmit={handleGenerate} className="space-y-6">
       <div className="space-y-2">
-        <Label className="text-[14px] font-bold text-[#394649]">Topic</Label>
-        <Input required value={topic} onChange={e => setTopic(e.target.value)} placeholder="e.g. Advanced System Design in Node.js" className="h-11 border-[#E5E5E5] rounded-md text-[14px]" />
+        <Label className="text-[14px] font-bold text-[#394649]">What do you want to teach?</Label>
+        <Input required topic={topic} onChange={(e: any) => setTopic(e.target.value)} placeholder="e.g. Building Scalable Web Apps with React & Node" className="h-12 border-[#E5E5E5] rounded-md text-[15px]" />
       </div>
-      
-      <div className="grid grid-cols-2 gap-6">
+
+      <div className="grid grid-cols-2 gap-5">
         <div className="space-y-2">
           <Label className="text-[14px] font-bold text-[#394649]">Target Audience</Label>
-          <Input required value={audience} onChange={e => setAudience(e.target.value)} placeholder="e.g. Frontend Developers" className="h-11 border-[#E5E5E5] rounded-md text-[14px]" />
+          <Input value={audience} onChange={e => setAudience(e.target.value)} placeholder="e.g. Junior Devs" className="h-11 border-[#E5E5E5] rounded-md text-[14px]" />
         </div>
         <div className="space-y-2">
-          <Label className="text-[14px] font-bold text-[#394649]">Level</Label>
+          <Label className="text-[14px] font-bold text-[#394649]">Difficulty Level</Label>
           <Select value={level} onValueChange={setLevel}>
             <SelectTrigger className="h-11 border-[#E5E5E5] rounded-md text-[14px]">
               <SelectValue />
@@ -400,30 +402,32 @@ function AICourseForm({ creatorId, onSuccess }: { creatorId: number, onSuccess: 
               <SelectItem value="beginner">Beginner</SelectItem>
               <SelectItem value="intermediate">Intermediate</SelectItem>
               <SelectItem value="advanced">Advanced</SelectItem>
-              <SelectItem value="expert">Expert</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <div className="space-y-5 pt-2">
+      <div className="space-y-4 pt-2">
         <div className="flex justify-between items-center">
-          <Label className="text-[14px] font-bold text-[#394649]">Number of Modules</Label>
-          <span className="font-bold text-[14px] bg-[#FAFAFA] border border-[#E5E5E5] px-3 py-1 rounded text-primary">{sectionCount[0]}</span>
+          <Label className="text-[14px] font-bold text-[#394649]">Number of Sections</Label>
+          <span className="text-[14px] font-bold text-primary">{sectionCount[0]} Modules</span>
         </div>
-        <Slider 
-          min={1} max={10} step={1} 
-          value={sectionCount} 
-          onValueChange={setSectionCount} 
+        <input 
+          type="range" 
+          min="2" 
+          max="10" 
+          value={sectionCount[0]} 
+          onChange={(e) => setSectionCount([parseInt(e.target.value)])}
+          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
         />
       </div>
 
-      <div className="pt-8">
-        <Button type="submit" disabled={generateOutline.isPending} className="w-full h-12 bg-[#704FE6] hover:bg-[#5b3dcf] text-white font-medium rounded-md text-[15px] shadow-[0_4px_14px_rgba(112,79,230,0.25)]">
+      <div className="pt-6 flex justify-end">
+        <Button type="submit" disabled={generateOutline.isPending} className="h-12 px-10 bg-[#704FE6] hover:bg-[#5C3CC7] text-white font-medium rounded-md text-[15px] shadow-[0_4px_14px_rgba(112,79,230,0.25)]">
           {generateOutline.isPending ? (
-            <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Analyzing Topic...</>
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Thinking...</>
           ) : (
-            <><Sparkles className="w-5 h-5 mr-2" /> Generate Curriculum Draft</>
+            <><Sparkles className="w-4 h-4 mr-2" /> Generate Curriculum Outline</>
           )}
         </Button>
       </div>

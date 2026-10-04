@@ -1,12 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Link } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  getCourseBuilder, saveCourse, setCourseStatus, addModule, renameModule, deleteModule as deleteModuleFn, 
-  addLesson, updateLesson, deleteLesson as deleteLessonFn 
-} from "@/lib/creator.functions";
-import { listCategories } from "@/lib/marketplace.functions";
-
+import { useState, useRef, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
@@ -21,9 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
-  ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, GripVertical,
-  Layout, ListVideo, MoreVertical, Plus, Settings, Video, FileText,
-  Trash, Edit2, Check, AlertCircle, PlayCircle
+  ArrowLeft, CheckCircle2, ListVideo, Plus, Settings, Video, FileText,
+  Trash, Edit2, Check, AlertCircle, PlayCircle, ChevronDown, ChevronUp, GripVertical
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -35,11 +26,11 @@ import {
 
 import { LessonVideoUpload } from "@/components/dashboard/LessonVideoUpload";
 import { LessonResourceUpload } from "@/components/dashboard/LessonResourceUpload";
-import { LiveClassesTab, LiveClassFormDialog } from "@/components/dashboard/LiveClassesTab";
+import { LiveClassesTab } from "@/components/dashboard/LiveClassesTab";
 
 export function CourseBuilder({
   productId,
-  backRoute = "/dashboard/creator/courses",
+  backRoute = "/dashboard/creator",
   backLabel = "Course Builder",
   role = "creator"
 }: {
@@ -50,7 +41,10 @@ export function CourseBuilder({
 }) {
   const [activeTab, setActiveTab] = useState<"basics" | "curriculum" | "live" | "publish">("basics");
 
-  const { data: builder, isLoading, error } = useQuery({ queryKey: ["creatorCourseBuilder", productId], queryFn: () => getCourseBuilder({ courseId: String(productId) }) });
+  const { data: builder, isLoading, error } = useQuery({ 
+    queryKey: ["creatorCourseBuilder", productId], 
+    queryFn: () => getCourseBuilder({ courseId: String(productId) }) 
+  });
   const readiness = { ready: true }; // TODO(phase2): Implement readiness check
 
   if (isLoading) {
@@ -143,8 +137,11 @@ function BasicsTab({ productId, product, course }: { productId: number, product:
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const updateBasics = useMutation({ mutationFn: (args: { productId: number, data: any }) => saveCourse({ ...args.data, id: String(args.productId) }) });
+  
+  // TODO(phase2): Mocking upload mutations
   const requestUpload = { mutateAsync: async (args: any) => { throw new Error("Thumbnail upload TODO(phase2)"); }, isPending: false } as any;
   const finalizeUpload = { mutateAsync: async (args: any) => { throw new Error("Thumbnail upload TODO(phase2)"); }, isPending: false } as any;
+  
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: () => listCategories() });
 
   const [title, setTitle] = useState(product.title || "");
@@ -188,8 +185,6 @@ function BasicsTab({ productId, product, course }: { productId: number, product:
     }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] });
-        queryClient.invalidateQueries({ queryKey: ["readiness", productId] });
-        queryClient.invalidateQueries({ queryKey: ["creatorProducts"] });
         toast({ title: "Saved", description: "Course details updated." });
       },
       onError: (error: Error) => {
@@ -200,70 +195,6 @@ function BasicsTab({ productId, product, course }: { productId: number, product:
         });
       }
     });
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Maximum file size is 10MB.", variant: "destructive" });
-      return;
-    }
-
-    // Clear input so same file can be uploaded again if needed
-    e.target.value = '';
-
-    try {
-      setUploadProgress(0);
-      const res = await requestUpload.mutateAsync({
-        productId,
-        data: {
-          filename: file.name,
-          mimeType: file.type,
-          sizeBytes: file.size,
-        }
-      });
-
-      const { uploadURL, objectPath } = res;
-
-      const xhr = new XMLHttpRequest();
-      xhr.open("PUT", uploadURL);
-      xhr.setRequestHeader("Content-Type", file.type);
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          setUploadProgress(Math.round((event.loaded / event.total) * 100));
-        }
-      };
-
-      await new Promise((resolve, reject) => {
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) resolve(xhr.responseText);
-          else reject(new Error(`Upload failed with status ${xhr.status}`));
-        };
-        xhr.onerror = () => reject(new Error("Upload failed"));
-        xhr.send(file);
-      });
-
-      setUploadProgress(100);
-
-      await finalizeUpload.mutateAsync({
-        productId,
-        data: { objectPath }
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] });
-      queryClient.invalidateQueries({ queryKey: ["readiness", productId] });
-      queryClient.invalidateQueries({ queryKey: ["marketplaceCourses"] });
-      queryClient.invalidateQueries({ queryKey: ['getMarketplaceCourse'] });
-
-      toast({ title: "Thumbnail uploaded successfully" });
-
-    } catch (err: any) {
-      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
-    } finally {
-      setUploadProgress(null);
-    }
   };
 
   const addOutcome = () => setOutcomes([...outcomes, ""]);
@@ -389,140 +320,121 @@ function BasicsTab({ productId, product, course }: { productId: number, product:
                 </>
               ) : uploadProgress !== null ? (
                 <div className="w-full max-w-[200px] space-y-2">
-                  <div className="flex justify-between text-[13px] text-[#4D4D4D] font-bold">
+                  <div className="flex justify-between text-[12px] font-bold text-black">
                     <span>Uploading...</span>
                     <span>{uploadProgress}%</span>
                   </div>
-                  <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
                     <div className="h-full bg-primary transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                   </div>
                 </div>
               ) : (
                 <>
-                  <div className="w-12 h-12 rounded-full bg-[#E3F9EF] flex items-center justify-center text-primary">
-                    <CheckCircle2 className="w-6 h-6" />
+                  <PlayCircle className="w-10 h-10 text-[#9794AA] mb-2" />
+                  <div className="space-y-1">
+                    <p className="text-[14px] font-bold text-black">Upload a thumbnail</p>
+                    <p className="text-[12px] text-[#4D4D4D]">Recommended: 1280x720px (16:9)</p>
                   </div>
-                  <div>
-                    <p className="text-[14px] font-bold text-black">Upload thumbnail</p>
-                    <p className="text-[12px] text-[#9794AA] mt-1">JPG, PNG, WebP up to 10MB</p>
-                  </div>
-                  <Label htmlFor="file-upload" className="cursor-pointer bg-primary text-white hover:bg-[#10A364] h-9 px-5 inline-flex items-center justify-center rounded-md text-[13px] font-medium transition-colors mt-2 shadow-sm">
-                    Select File
+                  <Label htmlFor="file-upload" className="mt-2 cursor-pointer bg-white border border-[#DADADA] text-[#394649] hover:bg-gray-50 h-9 px-5 inline-flex items-center justify-center rounded-md text-[13px] font-medium transition-colors shadow-sm">
+                    Select Image
                   </Label>
                 </>
               )}
-              <Input
-                id="file-upload"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="hidden"
-                onChange={handleFileUpload}
-                disabled={uploadProgress !== null}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="thumbnail" className="text-[12px] text-[#9794AA]">Or provide an image URL</Label>
-              <Input
-                id="thumbnail"
-                value={thumbnailUrl}
-                onChange={e => setThumbnailUrl(e.target.value)}
-                placeholder="https://example.com/image.jpg"
-                className="h-10 text-[14px] border-[#E5E5E5] rounded-md"
+              <input 
+                id="file-upload" 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={() => toast({ title: "Thumbnail upload TODO(phase2)" })}
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="level" className="text-[14px] font-bold text-[#394649]">Difficulty Level</Label>
-            <select
-              id="level"
-              value={level}
-              onChange={e => setLevel(e.target.value)}
-              className="flex h-11 w-full rounded-md border border-[#E5E5E5] bg-white px-3 py-2 text-[15px] font-medium text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-            >
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
-              <option value="all-levels">All Levels</option>
-            </select>
+          <div className="space-y-4">
+            <Label className="text-[14px] font-bold text-[#394649]">Course Level</Label>
+            <div className="grid grid-cols-3 gap-3">
+              {['beginner', 'intermediate', 'advanced'].map((l) => (
+                <button
+                  key={l}
+                  onClick={() => setLevel(l)}
+                  className={`h-11 rounded-md border text-[13px] font-medium transition-all ${
+                    level === l 
+                      ? "border-primary bg-[#E3F9EF] text-primary shadow-sm" 
+                      : "border-[#E5E5E5] bg-white text-[#4D4D4D] hover:border-[#DADADA]"
+                  }`}
+                >
+                  {l.charAt(0).toUpperCase() + l.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Outcomes */}
-        <div className="space-y-5 pt-6 border-t border-[#E5E5E5]">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label className="text-[16px] font-bold text-black">What you'll learn (Outcomes)</Label>
-            <Button variant="outline" size="sm" onClick={addOutcome} className="border-[#DADADA] text-[#394649] bg-white hover:bg-gray-50 h-9 px-4 rounded-md font-medium text-[13px]"><Plus className="w-4 h-4 mr-2" /> Add Outcome</Button>
+            <Label className="text-[14px] font-bold text-[#394649]">Learning Outcomes</Label>
+            <Button variant="ghost" size="sm" onClick={addOutcome} className="text-primary hover:text-[#10A364] hover:bg-green-50 h-8 font-bold text-[13px]">
+              <Plus className="w-4 h-4 mr-1" /> Add Outcome
+            </Button>
           </div>
-          {outcomes.length === 0 ? (
-            <div className="text-[14px] text-[#4D4D4D] p-5 bg-[#FAFAFA] rounded-lg border border-[#E5E5E5] text-center">
-              No outcomes added yet. Add some to show students what they will achieve.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {outcomes.map((outcome, index) => (
-                <div key={index} className="flex gap-3 items-center">
-                  <div className="text-primary"><CheckCircle2 className="w-5 h-5" /></div>
+          <div className="grid gap-3">
+            {outcomes.map((outcome, i) => (
+              <div key={i} className="flex gap-2">
+                <Input
+                  value={outcome}
+                  onChange={e => updateOutcome(i, e.target.value)}
+                  placeholder="What will students learn?"
+                  className="text-[14px] border-[#E5E5E5] rounded-md"
+                />
+                <Button variant="ghost" size="icon" onClick={() => removeOutcome(i)} className="text-[#9794AA] hover:text-[#E53E3E] hover:bg-red-50">
+                  <Trash className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+            {outcomes.length === 0 && (
+              <p className="text-[13px] text-[#9794AA] italic py-2 text-center border-2 border-dashed border-[#E5E5E5] rounded-lg">No outcomes added yet. Click Add Outcome to start.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label className="text-[14px] font-bold text-[#394649]">Frequently Asked Questions</Label>
+            <Button variant="ghost" size="sm" onClick={addFaq} className="text-primary hover:text-[#10A364] hover:bg-green-50 h-8 font-bold text-[13px]">
+              <Plus className="w-4 h-4 mr-1" /> Add FAQ
+            </Button>
+          </div>
+          <div className="space-y-4">
+            {faqs.map((faq, i) => (
+              <div key={i} className="p-4 border border-[#E5E5E5] rounded-lg bg-[#FAFAFA] space-y-3 relative group">
+                <Button variant="ghost" size="icon" onClick={() => removeFaq(i)} className="absolute top-2 right-2 text-[#9794AA] hover:text-[#E53E3E] opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Trash className="w-4 h-4" />
+                </Button>
+                <div className="space-y-2">
+                  <Label className="text-[12px] font-bold text-[#4D4D4D] uppercase">Question</Label>
                   <Input
-                    value={outcome}
-                    onChange={(e) => updateOutcome(index, e.target.value)}
-                    placeholder="e.g. Master React fundamentals"
-                    className="flex-1 h-10 border-[#E5E5E5] text-[14px]"
+                    value={faq.question}
+                    onChange={e => updateFaq(i, "question", e.target.value)}
+                    placeholder="e.g. Is there any prerequisite?"
+                    className="bg-white text-[14px] border-[#E5E5E5]"
                   />
-                  <Button variant="ghost" size="icon" onClick={() => removeOutcome(index)} className="text-[#E53E3E] hover:text-[#E53E3E] hover:bg-red-50 h-10 w-10"><Trash className="w-4 h-4" /></Button>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* FAQs */}
-        <div className="space-y-5 pt-6 border-t border-[#E5E5E5]">
-          <div className="flex items-center justify-between">
-            <Label className="text-[16px] font-bold text-black">Frequently Asked Questions</Label>
-            <Button variant="outline" size="sm" onClick={addFaq} className="border-[#DADADA] text-[#394649] bg-white hover:bg-gray-50 h-9 px-4 rounded-md font-medium text-[13px]"><Plus className="w-4 h-4 mr-2" /> Add FAQ</Button>
+                <div className="space-y-2">
+                  <Label className="text-[12px] font-bold text-[#4D4D4D] uppercase">Answer</Label>
+                  <Textarea
+                    value={faq.answer}
+                    onChange={e => updateFaq(i, "answer", e.target.value)}
+                    placeholder="Provide a helpful answer..."
+                    className="bg-white text-[14px] border-[#E5E5E5] resize-none"
+                    rows={2}
+                  />
+                </div>
+              </div>
+            ))}
+            {faqs.length === 0 && (
+              <p className="text-[13px] text-[#9794AA] italic py-2 text-center border-2 border-dashed border-[#E5E5E5] rounded-lg">No FAQs added yet.</p>
+            )}
           </div>
-          {faqs.length === 0 ? (
-            <div className="text-[14px] text-[#4D4D4D] p-5 bg-[#FAFAFA] rounded-lg border border-[#E5E5E5] text-center">
-              No FAQs added yet.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {faqs.map((faq, index) => (
-                <div key={index} className="p-5 bg-white border border-[#E5E5E5] rounded-lg shadow-sm space-y-4 relative group hover:shadow-md transition-shadow">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeFaq(index)}
-                    className="absolute top-3 right-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-[#E53E3E] hover:text-[#E53E3E] hover:bg-red-50 h-10 w-10"
-                  >
-                    <Trash className="w-4 h-4" />
-                  </Button>
-                  <div className="pr-8 space-y-4">
-                    <div>
-                      <Label className="text-[12px] font-bold text-[#9794AA] uppercase tracking-wider mb-2 block">Question</Label>
-                      <Input
-                        value={faq.question}
-                        onChange={(e) => updateFaq(index, "question", e.target.value)}
-                        placeholder="e.g. Do I need prior experience?"
-                        className="h-10 border-[#E5E5E5] font-bold text-[14px]"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-[12px] font-bold text-[#9794AA] uppercase tracking-wider mb-2 block">Answer</Label>
-                      <Textarea
-                        value={faq.answer}
-                        onChange={(e) => updateFaq(index, "answer", e.target.value)}
-                        placeholder="e.g. No, this course starts from the absolute basics."
-                        className="resize-none min-h-[80px] border-[#E5E5E5] text-[14px]"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -532,375 +444,273 @@ function BasicsTab({ productId, product, course }: { productId: number, product:
 function CurriculumTab({ productId, modules }: { productId: number, modules: any[] }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const createModule = useMutation({ mutationFn: (args: { productId: number, data: { title: string } }) => addModule({ courseId: String(args.productId), title: args.data.title }) });
-  const updateModule = useMutation({ mutationFn: (args: { moduleId: any, data: { title: string } }) => renameModule({ moduleId: String(args.moduleId), title: args.data.title }) });
-  const deleteModule = useMutation({ mutationFn: (args: { moduleId: any }) => deleteModuleFn({ moduleId: String(args.moduleId) }) });
-  const reorderModules = { mutate: (args: any, options?: any) => { console.log("Reorder modules TODO(phase2)"); options?.onSuccess?.(); }, isPending: false } as any;
+  const addModuleMutation = useMutation({ mutationFn: (title: string) => addModule({ courseId: String(productId), title }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] }) });
+  const renameModuleMutation = useMutation({ mutationFn: (args: { moduleId: number, title: string }) => renameModule({ moduleId: String(args.moduleId), title: args.title }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] }) });
+  const deleteModuleMutation = useMutation({ mutationFn: (moduleId: number) => deleteModuleFn({ moduleId: String(moduleId) }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] }) });
+  
+  const [newModuleTitle, setNewModuleTitle] = useState("");
+  const [isAddingModule, setIsAddingModule] = useState(false);
 
   const handleAddModule = () => {
-    createModule.mutate({
-      productId,
-      data: { title: "New Module" }
-    }, {
+    if (!newModuleTitle.trim()) return;
+    addModuleMutation.mutate(newModuleTitle, {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] });
-        queryClient.invalidateQueries({ queryKey: ["readiness", productId] });
-      }
-    });
-  };
-
-  const handleMoveModule = (currentIndex: number, direction: 'up' | 'down') => {
-    if (direction === 'up' && currentIndex === 0) return;
-    if (direction === 'down' && currentIndex === modules.length - 1) return;
-
-    const newModules = [...modules];
-    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    const temp = newModules[currentIndex];
-    newModules[currentIndex] = newModules[targetIndex];
-    newModules[targetIndex] = temp;
-
-    reorderModules.mutate({
-      productId,
-      data: { moduleIds: newModules.map(m => m.id) }
-    }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] });
+        setNewModuleTitle("");
+        setIsAddingModule(false);
+        toast({ title: "Module added" });
       }
     });
   };
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-[24px] font-bold text-black">Curriculum</h2>
-          <p className="text-[#4D4D4D] text-[14px] mt-1">Organize your lessons into modules.</p>
+          <h2 className="text-[24px] font-bold text-black">Course Curriculum</h2>
+          <p className="text-[#4D4D4D] text-[14px] mt-1">Organize your course into modules and lessons.</p>
         </div>
-        <Button onClick={handleAddModule} disabled={createModule.isPending} className="border border-[#DADADA] text-[#394649] bg-white hover:bg-gray-50 h-9 px-4 rounded-md font-medium text-[13px]">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Module
-        </Button>
+        {!isAddingModule ? (
+          <Button onClick={() => setIsAddingModule(true)} className="h-9 px-4 bg-primary hover:bg-[#10A364] text-white font-medium rounded-md text-[13px] shadow-[0_4px_14px_rgba(21,207,116,0.25)]">
+            <Plus className="w-4 h-4 mr-2" /> Add Module
+          </Button>
+        ) : (
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Input 
+              value={newModuleTitle} 
+              onChange={e => setNewModuleTitle(e.target.value)}
+              placeholder="Module title..."
+              className="h-9 text-[13px]"
+              autoFocus
+              onKeyDown={e => e.key === 'Enter' && handleAddModule()}
+            />
+            <Button size="sm" onClick={handleAddModule} disabled={addModuleMutation.isPending}>Add</Button>
+            <Button size="sm" variant="ghost" onClick={() => setIsAddingModule(false)}>Cancel</Button>
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">
-        {modules.length === 0 ? (
-          <div className="text-center py-12 border-2 border-dashed border-[#E5E5E5] rounded-xl bg-[#FAFAFA]">
+        {modules.map((module, idx) => (
+          <ModuleItem 
+            key={module.id} 
+            module={module} 
+            productId={productId} 
+            index={idx}
+            onRename={(title) => renameModuleMutation.mutate({ moduleId: module.id, title })}
+            onDelete={() => deleteModuleMutation.mutate(module.id)}
+          />
+        ))}
+        {modules.length === 0 && !isAddingModule && (
+          <div className="text-center py-16 border-2 border-dashed border-[#E5E5E5] rounded-xl bg-[#FAFAFA]">
             <ListVideo className="w-10 h-10 text-[#9794AA] mx-auto mb-3" />
-            <h3 className="font-bold text-[16px] text-black">No modules yet</h3>
-            <p className="text-[14px] text-[#4D4D4D] mb-6">Start by adding a module to organize your lessons.</p>
-            <Button variant="outline" onClick={handleAddModule} disabled={createModule.isPending} className="border border-[#DADADA] text-[#394649] bg-white hover:bg-gray-50 h-10 px-6 rounded-md font-medium text-[14px]">Add Module</Button>
+            <h3 className="font-bold text-[16px] text-black">Your curriculum is empty</h3>
+            <p className="text-[14px] text-[#4D4D4D] mb-6">Start by adding your first module.</p>
+            <Button onClick={() => setIsAddingModule(true)} variant="outline" className="border border-[#DADADA] text-[#394649] bg-white hover:bg-gray-50 h-10 px-6 rounded-md font-medium text-[14px]">
+              <Plus className="w-4 h-4 mr-2" /> Create First Module
+            </Button>
           </div>
-        ) : (
-          modules.map((mod: any, index: number) => (
-            <ModuleItem
-              key={mod.id}
-              module={mod}
-              index={index}
-              total={modules.length}
-              onMove={handleMoveModule}
-              productId={productId}
-            />
-          ))
         )}
       </div>
     </div>
   );
 }
 
-function ModuleItem({ module, index, total, onMove, productId }: any) {
-  const queryClient = useQueryClient();
-  const updateModule = useMutation({ mutationFn: (args: { moduleId: any, data: { title: string } }) => renameModule({ moduleId: String(args.moduleId), title: args.data.title }) });
-  const deleteModule = useMutation({ mutationFn: (args: { moduleId: any }) => deleteModuleFn({ moduleId: String(args.moduleId) }) });
-  const createLesson = useMutation({ mutationFn: (args: { moduleId: any, data: any }) => addLesson({ moduleId: String(args.moduleId), ...args.data }) });
-  const reorderLessons = { mutate: (args: any, options?: any) => { console.log("Reorder lessons TODO(phase2)"); options?.onSuccess?.(); }, isPending: false } as any;
-
+function ModuleItem({ module, productId, index, onRename, onDelete }: any) {
+  const [isExpanded, setIsExpanded] = useState(index === 0);
   const [isEditing, setIsEditing] = useState(false);
-  const [isLiveClassFormOpen, setIsLiveClassFormOpen] = useState(false);
   const [title, setTitle] = useState(module.title);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const saveTitle = () => {
-    if (title !== module.title) {
-      updateModule.mutate({
-        moduleId: module.id,
-        data: { title }
-      }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] });
-        }
-      });
+  const addLessonMutation = useMutation({ 
+    mutationFn: (title: string) => addLesson({ moduleId: String(module.id), title, isPreview: false }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] })
+  });
+
+  const [newLessonTitle, setNewLessonTitle] = useState("");
+  const [isAddingLesson, setIsAddingLesson] = useState(false);
+
+  const handleAddLesson = () => {
+    if (!newLessonTitle.trim()) return;
+    addLessonMutation.mutate(newLessonTitle, {
+      onSuccess: () => {
+        setNewLessonTitle("");
+        setIsAddingLesson(false);
+        toast({ title: "Lesson added" });
+        setIsExpanded(true);
+      }
+    });
+  };
+
+  const handleSaveRename = () => {
+    if (title.trim() && title !== module.title) {
+      onRename(title);
     }
     setIsEditing(false);
   };
 
-  const handleAddLesson = () => {
-    createLesson.mutate({
-      moduleId: module.id,
-      data: { title: "New Lesson", isPreview: false }
-    }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] });
-        queryClient.invalidateQueries({ queryKey: ["readiness", productId] });
-      }
-    });
-  };
-
-  const handleMoveLesson = (lessonIndex: number, direction: 'up' | 'down') => {
-    const lessons = module.lessons || [];
-    if (direction === 'up' && lessonIndex === 0) return;
-    if (direction === 'down' && lessonIndex === lessons.length - 1) return;
-
-    const newLessons = [...lessons];
-    const targetIndex = direction === 'up' ? lessonIndex - 1 : lessonIndex + 1;
-    const temp = newLessons[lessonIndex];
-    newLessons[lessonIndex] = newLessons[targetIndex];
-    newLessons[targetIndex] = temp;
-
-    reorderLessons.mutate({
-      moduleId: module.id,
-      data: { lessonIds: newLessons.map(l => l.id) }
-    }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] });
-      }
-    });
-  };
-
   return (
-    <div className="border border-[#E5E5E5] rounded-xl bg-[#FAFAFA] overflow-hidden">
-      <div className="flex items-center justify-between p-3 bg-white border-b border-[#E5E5E5] group">
-        <div className="flex items-center gap-3 flex-1">
-          <div className="flex flex-col">
-            <button aria-label={`Move ${module.title} up`} onClick={() => onMove(index, 'up')} disabled={index === 0} className="p-0.5 text-[#9794AA] hover:text-black disabled:opacity-30"><ChevronUp className="w-4 h-4" /></button>
-            <button aria-label={`Move ${module.title} down`} onClick={() => onMove(index, 'down')} disabled={index === total - 1} className="p-0.5 text-[#9794AA] hover:text-black disabled:opacity-30"><ChevronDown className="w-4 h-4" /></button>
-          </div>
-          <span className="text-[12px] font-bold text-[#9794AA] uppercase tracking-wider w-24">Module {index + 1}</span>
+    <div className="border border-[#E5E5E5] rounded-lg bg-white shadow-sm overflow-hidden">
+      <div className={`flex items-center justify-between p-4 ${isExpanded ? "bg-[#FAFAFA] border-b border-[#E5E5E5]" : ""}`}>
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <GripVertical className="w-4 h-4 text-[#9794AA] cursor-grab" />
           {isEditing ? (
-            <Input
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              onBlur={saveTitle}
-              onKeyDown={e => e.key === 'Enter' && saveTitle()}
-              autoFocus
-              className="h-9 max-w-sm border-[#E5E5E5] text-[14px] font-bold text-black"
-            />
+            <div className="flex gap-2 flex-1">
+              <Input 
+                value={title} 
+                onChange={e => setTitle(e.target.value)}
+                className="h-8 text-[14px] font-bold"
+                autoFocus
+                onKeyDown={e => e.key === 'Enter' && handleSaveRename()}
+              />
+              <Button size="sm" className="h-8" onClick={handleSaveRename}>Save</Button>
+            </div>
           ) : (
-            <h3 className="font-bold text-[16px] text-black flex-1 cursor-pointer hover:text-primary transition-colors" onClick={() => setIsEditing(true)}>
-              {module.title}
+            <h3 className="font-bold text-[16px] text-black truncate cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+              Module {index + 1}: {module.title}
             </h3>
           )}
         </div>
-        <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-          <Button aria-label={`Edit ${module.title}`} variant="ghost" size="icon" onClick={() => setIsEditing(!isEditing)} className="h-10 w-10 text-[#9794AA] hover:text-black">
-            <Edit2 className="w-4 h-4" />
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-[#9794AA]" onClick={() => setIsAddingLesson(true)}>
+            <Plus className="w-4 h-4" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button aria-label={`More actions for ${module.title}`} variant="ghost" size="icon" className="h-10 w-10 text-[#9794AA] hover:text-black"><MoreVertical className="w-4 h-4" /></Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-[#9794AA]">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleAddLesson} className="cursor-pointer font-medium text-[13px]"><Plus className="w-4 h-4 mr-2" /> Add Lesson</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsLiveClassFormOpen(true)} className="cursor-pointer font-medium text-[13px]"><Video className="w-4 h-4 mr-2" /> Schedule Live Class</DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-[#E53E3E] focus:text-[#E53E3E] focus:bg-red-50 cursor-pointer font-medium text-[13px]"
-                onClick={() => {
-                  if(confirm('Delete this module and all its lessons?')) {
-                    deleteModule.mutate({ moduleId: module.id }, {
-                      onSuccess: () => {
-                        queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] });
-                        queryClient.invalidateQueries({ queryKey: ["readiness", productId] });
-                      }
-                    });
-                  }
-                }}
-              >
-                <Trash className="w-4 h-4 mr-2" /> Delete Module
+              <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                <Edit2 className="w-4 h-4 mr-2" /> Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive" onClick={() => confirm("Delete module?") && onDelete()}>
+                <Trash className="w-4 h-4 mr-2" /> Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <LiveClassFormDialog productId={productId} defaultModuleId={module.id} open={isLiveClassFormOpen} onOpenChange={setIsLiveClassFormOpen}>
-            <span className="hidden" />
-          </LiveClassFormDialog>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-[#9794AA]" onClick={() => setIsExpanded(!isExpanded)}>
+            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </Button>
         </div>
       </div>
 
-      <div className="p-3 space-y-2">
-        {(!module.lessons || module.lessons.length === 0) ? (
-          <div className="text-center py-6">
-            <p className="text-[14px] text-[#4D4D4D] mb-4">No lessons in this module.</p>
-            <div className="flex flex-col justify-center gap-2 sm:flex-row sm:gap-3">
-              <Button className="h-10 w-full border border-[#DADADA] bg-white px-4 text-[13px] font-medium text-[#394649] hover:bg-gray-50 sm:w-auto" onClick={handleAddLesson} disabled={createLesson.isPending}>
-                <Plus className="w-4 h-4 mr-2" /> Add First Lesson
-              </Button>
-              <Button className="h-10 w-full border border-[#DADADA] bg-white px-4 text-[13px] font-medium text-[#394649] hover:bg-gray-50 sm:w-auto" onClick={() => setIsLiveClassFormOpen(true)}>
-                <Video className="w-4 h-4 mr-2" /> Schedule Live Class
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {module.lessons.map((lesson: any, lIndex: number) => (
-              <LessonItem
-                key={lesson.id}
-                lesson={lesson}
-                index={lIndex}
-                total={module.lessons.length}
-                onMove={handleMoveLesson}
-                productId={productId}
+      {isExpanded && (
+        <div className="p-2 space-y-1">
+          {module.lessons?.map((lesson: any, lIdx: number) => (
+            <LessonItem key={lesson.id} lesson={lesson} productId={productId} index={lIdx} />
+          ))}
+          
+          {isAddingLesson ? (
+            <div className="p-3 bg-[#F8FCFA] border border-dashed border-primary/30 rounded-md flex gap-2">
+              <Input 
+                value={newLessonTitle}
+                onChange={e => setNewLessonTitle(e.target.value)}
+                placeholder="Lesson title..."
+                className="h-9 text-[13px]"
+                autoFocus
+                onKeyDown={e => e.key === 'Enter' && handleAddLesson()}
               />
-            ))}
-            <div className="pt-2 flex flex-col sm:flex-row gap-2">
-              <Button 
-                variant="outline" 
-                onClick={handleAddLesson} 
-                disabled={createLesson.isPending} 
-                className="flex-1 border-dashed border-[#DADADA] text-[#394649] bg-[#FAFAFA] hover:bg-white h-10 rounded-md font-medium text-[13px]"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Lesson
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsLiveClassFormOpen(true)} 
-                className="flex-1 border-dashed border-[#DADADA] text-[#394649] bg-[#FAFAFA] hover:bg-white h-10 rounded-md font-medium text-[13px]"
-              >
-                <Video className="w-4 h-4 mr-2" />
-                Schedule Live Class
-              </Button>
+              <Button size="sm" onClick={handleAddLesson} disabled={addLessonMutation.isPending}>Add</Button>
+              <Button size="sm" variant="ghost" onClick={() => setIsAddingLesson(false)}>Cancel</Button>
             </div>
-          </div>
-        )}
-      </div>
+          ) : (
+            <button 
+              onClick={() => setIsAddingLesson(true)}
+              className="w-full flex items-center justify-center py-3 border border-dashed border-[#E5E5E5] rounded-md text-[13px] text-[#9794AA] hover:text-primary hover:border-primary/50 hover:bg-gray-50 transition-all"
+            >
+              <Plus className="w-3 h-3 mr-2" /> Add Lesson
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-function LessonItem({ lesson, index, total, onMove, productId }: any) {
-  const queryClient = useQueryClient();
-  const updateLesson = useMutation({ mutationFn: (args: { lessonId: any, data: any }) => updateLessonFn({ lessonId: String(args.lessonId), ...args.data }) });
-  const deleteLesson = useMutation({ mutationFn: (args: { lessonId: any }) => deleteLessonFn({ lessonId: String(args.lessonId) }) });
-  const { toast } = useToast();
-
+function LessonItem({ lesson, productId, index }: any) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
-  const [showResources, setShowResources] = useState(false);
   const [title, setTitle] = useState(lesson.title);
-  const [description, setDescription] = useState(lesson.description || "");
-  const [isPreview, setIsPreview] = useState(lesson.isPreview || false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const saveLesson = () => {
-    if (title !== lesson.title || description !== lesson.description || isPreview !== lesson.isPreview) {
-      updateLesson.mutate({
-        lessonId: lesson.id,
-        data: { title, description, isPreview }
-      }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] });
-          queryClient.invalidateQueries({ queryKey: ["readiness", productId] });
-          toast({ title: "Lesson saved", description: "Your lesson changes are now live in this draft." });
-        },
-        onError: (error: Error) => {
-          toast({ title: "Could not save lesson", description: error.message, variant: "destructive" });
-        }
-      });
+  const updateLessonMutation = useMutation({ 
+    mutationFn: (data: any) => updateLesson({ lessonId: String(lesson.id), ...data }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] })
+  });
+
+  const deleteLessonMutation = useMutation({ 
+    mutationFn: () => deleteLessonFn({ lessonId: String(lesson.id) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] })
+  });
+
+  const handleSaveRename = () => {
+    if (title.trim() && title !== lesson.title) {
+      updateLessonMutation.mutate({ title });
     }
     setIsEditing(false);
   };
 
-  if (isEditing) {
-    return (
-      <div className="bg-white border border-primary/30 rounded-lg p-4 shadow-[0_4px_14px_rgba(21,207,116,0.1)] animate-in fade-in duration-200 space-y-4">
-        <div className="flex items-center justify-between">
-          <h4 className="font-bold text-[14px] text-black">Edit Lesson</h4>
-          <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} className="text-[#9794AA] hover:text-black">Cancel</Button>
-        </div>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-[13px] font-bold text-[#394649]">Title</Label>
-            <Input value={title} onChange={e => setTitle(e.target.value)} autoFocus className="h-10 border-[#E5E5E5] text-[14px]" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[13px] font-bold text-[#394649]">Description</Label>
-            <Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="resize-none border-[#E5E5E5] text-[14px]" />
-          </div>
-          <div className="flex items-center space-x-3 pt-2">
-            <Switch id={`preview-${lesson.id}`} checked={isPreview} onCheckedChange={setIsPreview} />
-            <Label htmlFor={`preview-${lesson.id}`} className="text-[14px] font-medium text-black">Free preview</Label>
-          </div>
-          <Button className="w-full h-10 bg-primary hover:bg-[#10A364] text-white font-medium rounded-md text-[14px]" size="sm" onClick={saveLesson} disabled={updateLesson.isPending}>Save Lesson</Button>
-        </div>
-      </div>
-    );
-  }
-
-  const asset = lesson.assets?.find((a: any) => a.kind === "video");
+  const togglePreview = () => {
+    updateLessonMutation.mutate({ isPreview: !lesson.isPreview });
+  };
 
   return (
-    <div className="flex flex-col p-3 bg-white border border-[#E5E5E5] rounded-lg group hover:shadow-md transition-shadow">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex flex-col">
-            <button aria-label={`Move ${lesson.title} up`} onClick={() => onMove(index, 'up')} disabled={index === 0} className="p-0.5 text-[#9794AA] hover:text-black disabled:opacity-30"><ChevronUp className="w-3 h-3" /></button>
-            <button aria-label={`Move ${lesson.title} down`} onClick={() => onMove(index, 'down')} disabled={index === total - 1} className="p-0.5 text-[#9794AA] hover:text-black disabled:opacity-30"><ChevronDown className="w-3 h-3" /></button>
-          </div>
-          <div
-            className="w-10 h-10 rounded flex items-center justify-center cursor-pointer hover:bg-[#E3F9EF] transition-colors"
-            onClick={() => setShowVideo(!showVideo)}
-            title="Toggle video settings"
-          >
-            {asset && asset.status === 'uploaded' ? (
-              <Video className="w-4 h-4 text-primary" />
-            ) : (
-              <PlayCircle className="w-4 h-4 text-[#9794AA]" />
-            )}
-          </div>
-          <div className="min-w-0">
-            <h4 className="flex items-center gap-2 text-[14px] font-bold leading-tight text-black">
-              <span className="truncate">{lesson.title}</span>
-              {lesson.isPreview && <Badge className="bg-[#E3F9EF] text-primary text-[10px] px-1.5 py-0 h-4 border-none shadow-none font-bold uppercase tracking-wider hover:bg-[#E3F9EF]">Preview</Badge>}
-            </h4>
-            {lesson.description && <p className="text-[12px] text-[#4D4D4D] mt-1.5 line-clamp-1">{lesson.description}</p>}
-          </div>
+    <div className={`group rounded-md border ${isExpanded ? "border-primary/20 bg-primary/[0.02]" : "border-transparent hover:border-[#E5E5E5] hover:bg-gray-50"}`}>
+      <div className="flex items-center justify-between p-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <PlayCircle className={`w-4 h-4 ${lesson.assets?.some((a:any) => a.kind === 'video') ? "text-primary" : "text-[#9794AA]"}`} />
+          {isEditing ? (
+            <div className="flex gap-2 flex-1">
+              <Input 
+                value={title} 
+                onChange={e => setTitle(e.target.value)}
+                className="h-8 text-[14px]"
+                autoFocus
+                onKeyDown={e => e.key === 'Enter' && handleSaveRename()}
+              />
+              <Button size="sm" className="h-8" onClick={handleSaveRename}>Save</Button>
+            </div>
+          ) : (
+            <span className="text-[14px] text-[#394649] truncate cursor-pointer font-medium" onClick={() => setIsExpanded(!isExpanded)}>
+              {index + 1}. {lesson.title}
+            </span>
+          )}
+          {lesson.isPreview && (
+            <Badge className="h-5 px-1.5 text-[9px] bg-amber-100 text-amber-700 hover:bg-amber-100 border-none">PREVIEW</Badge>
+          )}
         </div>
-
-        <div className="flex items-center justify-end gap-1 border-t border-[#F0F0F0] pt-2 opacity-100 transition-opacity sm:border-0 sm:pt-0 sm:opacity-0 sm:group-hover:opacity-100">
-          <Button aria-label={`Manage resources for ${lesson.title}`} variant="ghost" size="icon" onClick={() => setShowResources(!showResources)} className={`h-10 w-10 ${showResources ? 'text-primary bg-[#E3F9EF]' : 'text-[#9794AA] hover:text-black'}`}>
-            <FileText className="w-4 h-4" />
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-[#9794AA]" onClick={() => setIsEditing(true)}>
+            <Edit2 className="w-3 h-3" />
           </Button>
-          <Button aria-label={`Manage video for ${lesson.title}`} variant="ghost" size="icon" onClick={() => setShowVideo(!showVideo)} className={`h-10 w-10 ${showVideo ? 'text-primary bg-[#E3F9EF]' : 'text-[#9794AA] hover:text-black'}`}>
-            <Video className="w-4 h-4" />
-          </Button>
-          <Button aria-label={`Edit ${lesson.title}`} variant="ghost" size="icon" onClick={() => setIsEditing(true)} className="h-10 w-10 text-[#9794AA] hover:text-black">
-            <Edit2 className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`Delete ${lesson.title}`}
-            className="h-10 w-10 text-[#E53E3E] hover:bg-red-50 hover:text-[#E53E3E]"
-            onClick={() => {
-              if(confirm('Delete this lesson?')) {
-                deleteLesson.mutate({ lessonId: lesson.id }, {
-                  onSuccess: () => {
-                    queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] });
-                    queryClient.invalidateQueries({ queryKey: ["readiness", productId] });
-                  }
-                });
-              }
-            }}
-          >
-            <Trash className="w-4 h-4" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-[#9794AA]">
+                <MoreVertical className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={togglePreview}>
+                <Check className={`w-4 h-4 mr-2 ${lesson.isPreview ? "opacity-100" : "opacity-0"}`} />
+                Free Preview
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive" onClick={() => confirm("Delete lesson?") && deleteLessonMutation.mutate()}>
+                <Trash className="w-4 h-4 mr-2" /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-[#9794AA]" onClick={() => setIsExpanded(!isExpanded)}>
+            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </Button>
         </div>
       </div>
 
-      {showVideo && (
-        <div className="mt-4 pt-4 border-t border-[#E5E5E5] animate-in fade-in slide-in-from-top-2">
+      {isExpanded && (
+        <div className="px-10 pb-4 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
           <LessonVideoUpload lesson={lesson} productId={productId} />
-        </div>
-      )}
-
-      {showResources && (
-        <div className="mt-4 pt-4 border-t border-[#E5E5E5] animate-in fade-in slide-in-from-top-2">
           <LessonResourceUpload lesson={lesson} productId={productId} />
         </div>
       )}
@@ -911,84 +721,58 @@ function LessonItem({ lesson, index, total, onMove, productId }: any) {
 function PublishTab({ productId, product, readiness }: { productId: number, product: any, readiness: any }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const publish = usePublishCreatorCourse();
-
-  const handlePublish = () => {
-    publish.mutate({ productId }, {
-      onSuccess: () => {
-        toast({ title: "Course published successfully!" });
-        queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] });
-        queryClient.invalidateQueries({ queryKey: ["creatorProducts"] });
-      },
-      onError: (err: any) => {
-        toast({ title: "Publish failed", description: err.message, variant: "destructive" });
-      }
-    });
-  };
+  const setStatusMutation = useMutation({ 
+    mutationFn: (status: string) => setCourseStatus({ courseId: String(productId), status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["creatorCourseBuilder", productId] });
+      toast({ title: "Status updated" });
+    }
+  });
 
   const isPublished = product.status === 'published';
-  const checks = readiness?.checks || {};
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div>
-        <h2 className="text-[24px] font-bold text-black">Course Readiness</h2>
-        <p className="text-[#4D4D4D] text-[14px] mt-1">Review your course before making it live.</p>
+        <h2 className="text-[24px] font-bold text-black">Publish Course</h2>
+        <p className="text-[#4D4D4D] text-[14px] mt-1">Make your course available for students to purchase and learn.</p>
       </div>
 
-      <div className="bg-[#FAFAFA] border border-[#E5E5E5] rounded-xl p-6 space-y-5">
-        <ReadinessCheck
-          passed={checks.title}
-          title="Course Title"
-          desc="Your course has a title."
-        />
-        <ReadinessCheck
-          passed={checks.description}
-          title="Course Description"
-          desc="Your course has a description."
-        />
-        <ReadinessCheck
-          passed={checks.module}
-          title="Modules"
-          desc={`Your course has at least one module (${readiness?.moduleCount || 0} total).`}
-        />
-        <ReadinessCheck
-          passed={checks.lesson}
-          title="Lessons"
-          desc={`Your course has at least one lesson (${readiness?.lessonCount || 0} total).`}
-        />
-      </div>
-
-      <div className="pt-6 border-t border-[#E5E5E5] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h3 className="font-bold text-[18px] text-black">{isPublished ? 'Course is Live' : 'Publish Course'}</h3>
-          <p className="text-[14px] text-[#4D4D4D] mt-1">
-            {isPublished
-              ? 'Your course is visible to students.'
-              : 'Make this course available for free enrollment.'}
-          </p>
+      <div className={`p-6 rounded-xl border-2 ${readiness.ready ? "border-green-100 bg-green-50" : "border-amber-100 bg-amber-50"}`}>
+        <div className="flex items-start gap-4">
+          <div className={`p-3 rounded-full ${readiness.ready ? "bg-primary text-white" : "bg-amber-500 text-white"}`}>
+            {readiness.ready ? <CheckCircle2 className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
+          </div>
+          <div>
+            <h3 className="font-bold text-[18px] text-black">
+              {readiness.ready ? "Ready to publish!" : "Finish setup to publish"}
+            </h3>
+            <p className="text-[14px] text-[#4D4D4D] mt-1">
+              {readiness.ready 
+                ? "All required fields are completed. You can now publish your course to the marketplace."
+                : "Some required details are missing. Please complete them before publishing."}
+            </p>
+          </div>
         </div>
-        <Button
-          onClick={handlePublish}
-          disabled={!true || isPublished || publish.isPending}
-          className={`h-12 px-8 font-medium rounded-md text-[15px] shadow-[0_4px_14px_rgba(21,207,116,0.25)] ${isPublished ? "bg-[#10A364] text-white opacity-80" : "bg-primary hover:bg-[#10A364] text-white"}`}
-        >
-          {publish.isPending ? "Publishing..." : isPublished ? "Update Live Course" : "Publish Course"}
-        </Button>
       </div>
-    </div>
-  );
-}
 
-function ReadinessCheck({ passed, title, desc }: { passed: boolean, title: string, desc: string }) {
-  return (
-    <div className="flex items-start gap-4">
-      <div className={`mt-0.5 w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${passed ? 'bg-[#E3F9EF] text-primary' : 'bg-gray-100 border border-[#E5E5E5] text-[#9794AA]'}`}>
-        {passed ? <CheckCircle2 className="w-4 h-4" /> : <span className="w-1.5 h-1.5 rounded-full bg-[#9794AA]/50" />}
-      </div>
-      <div>
-        <h4 className={`text-[14px] font-bold ${passed ? 'text-black' : 'text-[#9794AA]'}`}>{title}</h4>
-        <p className="text-[13px] text-[#4D4D4D] mt-1">{desc}</p>
+      <div className="rounded-xl border border-[#E5E5E5] bg-white p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-bold text-[16px] text-black">Visibility Status</p>
+            <p className="text-[14px] text-[#4D4D4D] mt-0.5">Control if your course is visible to the public.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className={`text-[14px] font-bold ${isPublished ? "text-primary" : "text-[#9794AA]"}`}>
+              {isPublished ? "Published" : "Draft"}
+            </span>
+            <Switch 
+              checked={isPublished}
+              disabled={!readiness.ready || setStatusMutation.isPending}
+              onCheckedChange={(checked) => setStatusMutation.mutate(checked ? 'published' : 'draft')}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

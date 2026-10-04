@@ -1,10 +1,8 @@
 import { CourseBuilder } from "../creator/CourseBuilder";
-import { useParams, Link } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { useParams } from "@tanstack/react-router";
 
 export function AdminCourseStudio({ productId }: { productId?: number }) {
-  const params = useParams();
+  const params = useParams({ strict: false }) as any;
   const id = productId || (params.id ? Number(params.id) : undefined);
 
   if (!id) {
@@ -18,7 +16,7 @@ export function AdminCourseStudio({ productId }: { productId?: number }) {
   return (
     <CourseBuilder 
       productId={id} 
-      backRoute="/dashboard/admin/courses" 
+      backRoute="/dashboard/admin" 
       backLabel="Admin Course Studio"
       role="admin"
     />
