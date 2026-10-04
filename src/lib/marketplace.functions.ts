@@ -4,8 +4,10 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
 function publicClient() {
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
-  return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
+  // Fall back to build-time public values so hosts without runtime env vars (e.g. Vercel) still work.
+  const key = (process.env["SUPABASE_PUBLISHABLE_KEY"] || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) as string;
+  const url = (process.env["SUPABASE_URL"] || import.meta.env.VITE_SUPABASE_URL) as string;
+  return createClient<Database>(url, key, {
     auth: { persistSession: false },
     global: {
       fetch: (input, init) => {
