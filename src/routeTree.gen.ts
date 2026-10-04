@@ -25,6 +25,8 @@ import { Route as CreatorsIndexRouteImport } from './routes/creators/index'
 import { Route as CreatorsUsernameRouteImport } from './routes/creators/$username'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products/$productId'
+import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated/dashboard/admin'
+import { Route as AuthenticatedDashboardCreatorRouteImport } from './routes/_authenticated/dashboard/creator'
 import { Route as AuthenticatedDashboardStudentRouteImport } from './routes/_authenticated/dashboard/student'
 
 const IndexRoute = IndexRouteImport.update({
@@ -106,6 +108,18 @@ const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
   path: '/products/$productId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDashboardAdminRoute =
+  AuthenticatedDashboardAdminRouteImport.update({
+    id: '/dashboard/admin',
+    path: '/dashboard/admin',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDashboardCreatorRoute =
+  AuthenticatedDashboardCreatorRouteImport.update({
+    id: '/dashboard/creator',
+    path: '/dashboard/creator',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardStudentRoute =
   AuthenticatedDashboardStudentRouteImport.update({
     id: '/dashboard/student',
@@ -129,6 +143,8 @@ export interface FileRoutesByFullPath {
   '/courses/': typeof CoursesIndexRoute
   '/creators/': typeof CreatorsIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/dashboard/creator': typeof AuthenticatedDashboardCreatorRoute
   '/dashboard/student': typeof AuthenticatedDashboardStudentRoute
 }
 export interface FileRoutesByTo {
@@ -147,6 +163,8 @@ export interface FileRoutesByTo {
   '/courses': typeof CoursesIndexRoute
   '/creators': typeof CreatorsIndexRoute
   '/products': typeof ProductsIndexRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/dashboard/creator': typeof AuthenticatedDashboardCreatorRoute
   '/dashboard/student': typeof AuthenticatedDashboardStudentRoute
 }
 export interface FileRoutesById {
@@ -167,6 +185,8 @@ export interface FileRoutesById {
   '/courses/': typeof CoursesIndexRoute
   '/creators/': typeof CreatorsIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/_authenticated/dashboard/creator': typeof AuthenticatedDashboardCreatorRoute
   '/_authenticated/dashboard/student': typeof AuthenticatedDashboardStudentRoute
 }
 export interface FileRouteTypes {
@@ -187,6 +207,8 @@ export interface FileRouteTypes {
     | '/courses/'
     | '/creators/'
     | '/products/'
+    | '/dashboard/admin'
+    | '/dashboard/creator'
     | '/dashboard/student'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -205,6 +227,8 @@ export interface FileRouteTypes {
     | '/courses'
     | '/creators'
     | '/products'
+    | '/dashboard/admin'
+    | '/dashboard/creator'
     | '/dashboard/student'
   id:
     | '__root__'
@@ -224,6 +248,8 @@ export interface FileRouteTypes {
     | '/courses/'
     | '/creators/'
     | '/products/'
+    | '/_authenticated/dashboard/admin'
+    | '/_authenticated/dashboard/creator'
     | '/_authenticated/dashboard/student'
   fileRoutesById: FileRoutesById
 }
@@ -360,6 +386,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/dashboard/admin': {
+      id: '/_authenticated/dashboard/admin'
+      path: '/dashboard/admin'
+      fullPath: '/dashboard/admin'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard/creator': {
+      id: '/_authenticated/dashboard/creator'
+      path: '/dashboard/creator'
+      fullPath: '/dashboard/creator'
+      preLoaderRoute: typeof AuthenticatedDashboardCreatorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard/student': {
       id: '/_authenticated/dashboard/student'
       path: '/dashboard/student'
@@ -371,10 +411,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRoute
+  AuthenticatedDashboardCreatorRoute: typeof AuthenticatedDashboardCreatorRoute
   AuthenticatedDashboardStudentRoute: typeof AuthenticatedDashboardStudentRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardAdminRoute: AuthenticatedDashboardAdminRoute,
+  AuthenticatedDashboardCreatorRoute: AuthenticatedDashboardCreatorRoute,
   AuthenticatedDashboardStudentRoute: AuthenticatedDashboardStudentRoute,
 }
 
