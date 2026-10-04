@@ -95,7 +95,7 @@ function CreatorDashboard() {
 
   return (
     <DashboardLayout role="creator" active={section} onNavigate={handleNavigate}>
-      {section === "overview" && <Overview onOpenCourse={openCourseBuilder} onOpenSales={() => setSection("sales")} />}
+      {section === "overview" && <Overview onOpenCourse={openCourseBuilder} onOpenSales={() => setSection("sales")} onOpenProducts={() => setSection("products")} />}
       {section === "courses" && !selectedId && <Courses onOpenCourse={openCourseBuilder} />}
       {section === "products" && !selectedId && <Products onOpenProduct={openProductManage} />}
       {section === "live-classes" && !selectedId && <Suspense fallback={<SectionFallback />}><CreatorLiveClassesStandalone /></Suspense>}
@@ -105,7 +105,7 @@ function CreatorDashboard() {
   );
 }
 
-function Overview({ onOpenCourse, onOpenSales }: { onOpenCourse: (id: string) => void, onOpenSales: () => void }) {
+function Overview({ onOpenCourse, onOpenSales, onOpenProducts }: { onOpenCourse: (id: string) => void, onOpenSales: () => void, onOpenProducts: () => void }) {
   const { data: account } = useQuery({ queryKey: ["my-account"], queryFn: () => getMyAccount() });
   const { data: sales, isLoading: salesLoading } = useQuery({ queryKey: ["creator-sales"], queryFn: () => getMySalesSummary() });
   const { data: products, isLoading: productsLoading } = useQuery({ queryKey: ["creator-products"], queryFn: () => getMyCreatorProducts() });
@@ -207,7 +207,7 @@ function Overview({ onOpenCourse, onOpenSales }: { onOpenCourse: (id: string) =>
                 <BookOpen className="w-5 h-5 mr-4" />
                 Manage Courses
             </button>
-            <button onClick={() => setSection("products")} className="w-full justify-start h-14 bg-white/10 hover:bg-white/20 text-white border-none rounded-lg text-[15px] transition-colors inline-flex items-center px-4 text-left">
+            <button onClick={onOpenProducts} className="w-full justify-start h-14 bg-white/10 hover:bg-white/20 text-white border-none rounded-lg text-[15px] transition-colors inline-flex items-center px-4 text-left">
                 <Package className="w-5 h-5 mr-4" />
                 Manage Products
             </button>
