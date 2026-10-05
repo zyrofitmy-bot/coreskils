@@ -26,11 +26,13 @@ import { Route as CoursesIndexRouteImport } from './routes/courses/index'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses/$courseId'
 import { Route as CreatorsIndexRouteImport } from './routes/creators/index'
 import { Route as CreatorsUsernameRouteImport } from './routes/creators/$username'
+import { Route as PaymentSuccessRouteImport } from './routes/payment/success'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products/$productId'
 import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated/dashboard/admin'
 import { Route as AuthenticatedDashboardCreatorRouteImport } from './routes/_authenticated/dashboard/creator'
 import { Route as AuthenticatedDashboardStudentRouteImport } from './routes/_authenticated/dashboard/student'
+import { Route as ApiPublicOxapayCallbackRouteImport } from './routes/api/public/oxapay-callback'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -116,6 +118,11 @@ const CreatorsUsernameRoute = CreatorsUsernameRouteImport.update({
   path: '/creators/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
+  id: '/payment/success',
+  path: '/payment/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsIndexRoute = ProductsIndexRouteImport.update({
   id: '/products/',
   path: '/products/',
@@ -144,6 +151,11 @@ const AuthenticatedDashboardStudentRoute =
     path: '/dashboard/student',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicOxapayCallbackRoute = ApiPublicOxapayCallbackRouteImport.update({
+  id: '/api/public/oxapay-callback',
+  path: '/api/public/oxapay-callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -160,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/auth/sign-up': typeof AuthSignUpRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/creators/$username': typeof CreatorsUsernameRoute
+  '/payment/success': typeof PaymentSuccessRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/courses/': typeof CoursesIndexRoute
   '/creators/': typeof CreatorsIndexRoute
@@ -167,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
   '/dashboard/creator': typeof AuthenticatedDashboardCreatorRoute
   '/dashboard/student': typeof AuthenticatedDashboardStudentRoute
+  '/api/public/oxapay-callback': typeof ApiPublicOxapayCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -183,6 +197,7 @@ export interface FileRoutesByTo {
   '/auth/sign-up': typeof AuthSignUpRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/creators/$username': typeof CreatorsUsernameRoute
+  '/payment/success': typeof PaymentSuccessRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/courses': typeof CoursesIndexRoute
   '/creators': typeof CreatorsIndexRoute
@@ -190,6 +205,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
   '/dashboard/creator': typeof AuthenticatedDashboardCreatorRoute
   '/dashboard/student': typeof AuthenticatedDashboardStudentRoute
+  '/api/public/oxapay-callback': typeof ApiPublicOxapayCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -208,6 +224,7 @@ export interface FileRoutesById {
   '/auth/sign-up': typeof AuthSignUpRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/creators/$username': typeof CreatorsUsernameRoute
+  '/payment/success': typeof PaymentSuccessRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/courses/': typeof CoursesIndexRoute
   '/creators/': typeof CreatorsIndexRoute
@@ -215,6 +232,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
   '/_authenticated/dashboard/creator': typeof AuthenticatedDashboardCreatorRoute
   '/_authenticated/dashboard/student': typeof AuthenticatedDashboardStudentRoute
+  '/api/public/oxapay-callback': typeof ApiPublicOxapayCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -233,6 +251,7 @@ export interface FileRouteTypes {
     | '/auth/sign-up'
     | '/courses/$courseId'
     | '/creators/$username'
+    | '/payment/success'
     | '/products/$productId'
     | '/courses/'
     | '/creators/'
@@ -240,6 +259,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin'
     | '/dashboard/creator'
     | '/dashboard/student'
+    | '/api/public/oxapay-callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -256,6 +276,7 @@ export interface FileRouteTypes {
     | '/auth/sign-up'
     | '/courses/$courseId'
     | '/creators/$username'
+    | '/payment/success'
     | '/products/$productId'
     | '/courses'
     | '/creators'
@@ -263,6 +284,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin'
     | '/dashboard/creator'
     | '/dashboard/student'
+    | '/api/public/oxapay-callback'
   id:
     | '__root__'
     | '/'
@@ -280,6 +302,7 @@ export interface FileRouteTypes {
     | '/auth/sign-up'
     | '/courses/$courseId'
     | '/creators/$username'
+    | '/payment/success'
     | '/products/$productId'
     | '/courses/'
     | '/creators/'
@@ -287,6 +310,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin'
     | '/_authenticated/dashboard/creator'
     | '/_authenticated/dashboard/student'
+    | '/api/public/oxapay-callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -303,10 +327,12 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   CreatorsUsernameRoute: typeof CreatorsUsernameRoute
+  PaymentSuccessRoute: typeof PaymentSuccessRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
   CoursesIndexRoute: typeof CoursesIndexRoute
   CreatorsIndexRoute: typeof CreatorsIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
+  ApiPublicOxapayCallbackRoute: typeof ApiPublicOxapayCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -430,6 +456,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CreatorsUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/payment/success': {
+      id: '/payment/success'
+      path: '/payment/success'
+      fullPath: '/payment/success'
+      preLoaderRoute: typeof PaymentSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products/': {
       id: '/products/'
       path: '/products'
@@ -464,6 +497,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/student'
       preLoaderRoute: typeof AuthenticatedDashboardStudentRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/oxapay-callback': {
+      id: '/api/public/oxapay-callback'
+      path: '/api/public/oxapay-callback'
+      fullPath: '/api/public/oxapay-callback'
+      preLoaderRoute: typeof ApiPublicOxapayCallbackRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -509,10 +549,12 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
   CreatorsUsernameRoute: CreatorsUsernameRoute,
+  PaymentSuccessRoute: PaymentSuccessRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
   CoursesIndexRoute: CoursesIndexRoute,
   CreatorsIndexRoute: CreatorsIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
+  ApiPublicOxapayCallbackRoute: ApiPublicOxapayCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

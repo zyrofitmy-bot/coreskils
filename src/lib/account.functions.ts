@@ -142,6 +142,26 @@ export const getMyProducts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+
+    // Claim any OxaPay purchases made with this account's email (guest checkout)
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("id", userId)
+      .maybeSingle();
+    if (profile?.email) {
+      const { data: paidPurchases } = await supabase
+        .from("oxapay_payments")
+        .select("product_id")
+        .eq("email", profile.email.toLowerCase())
+        .eq("status", "paid");
+      for (const purchase of paidPurchases ?? []) {
+        await supabase
+          .from("digital_product_entitlements")
+          .upsert({ user_id: userId, product_id: purchase.product_id });
+      }
+    }
+
     const { data } = await supabase
       .from("digital_product_entitlements")
       .select("*, products(*, categories(name, slug))")
