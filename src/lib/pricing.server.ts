@@ -1,7 +1,7 @@
 import { getRequest } from "@tanstack/react-start/server";
-import { FALLBACK_INR_PER_USD, currencyForCountry, type VisitorPricing } from "./pricing";
+import { FALLBACK_RATES, currencyForCountry, type VisitorPricing } from "./pricing";
 
-let cachedRate: { value: number; at: number } | null = null;
+let cachedRates: { value: Record<string, number>; at: number } | null = null;
 const RATE_TTL_MS = 6 * 60 * 60 * 1000;
 
 /** Reads the visitor's country from the hosting provider's IP geolocation headers. */
@@ -20,27 +20,33 @@ export function detectVisitorCountry(): string | null {
   }
 }
 
-export async function getInrPerUsd(): Promise<number> {
-  if (cachedRate && Date.now() - cachedRate.at < RATE_TTL_MS) return cachedRate.value;
+/** All exchange rates relative to 1 USD, cached for six hours. */
+export async function getUsdRates(): Promise<Record<string, number>> {
+  if (cachedRates && Date.now() - cachedRates.at < RATE_TTL_MS) return cachedRates.value;
   try {
     const res = await fetch("https://open.er-api.com/v6/latest/USD", {
       signal: AbortSignal.timeout(3000),
     });
     const json = (await res.json()) as { rates?: Record<string, number> };
-    const rate = json?.rates?.["INR"];
-    if (typeof rate === "number" && rate > 10 && rate < 1000) {
-      cachedRate = { value: rate, at: Date.now() };
-      return rate;
+    const inr = json?.rates?.["INR"];
+    if (json?.rates && typeof inr === "number" && inr > 10 && inr < 1000) {
+      cachedRates = { value: json.rates, at: Date.now() };
+      return json.rates;
     }
   } catch (e) {
     console.error("Exchange rate fetch failed", e);
   }
-  return cachedRate?.value ?? FALLBACK_INR_PER_USD;
+  return cachedRates?.value ?? FALLBACK_RATES;
+}
+
+export async function resolvePricingForCountry(country: string | null): Promise<VisitorPricing> {
+  const currency = currencyForCountry(country);
+  const all = await getUsdRates();
+  const rates: Record<string, number> = { USD: 1, INR: all["INR"] ?? FALLBACK_RATES["INR"]! };
+  if (all[currency]) rates[currency] = all[currency]!;
+  return { country, currency: rates[currency] ? currency : "USD", rates };
 }
 
 export async function resolveVisitorPricing(): Promise<VisitorPricing> {
-  const country = detectVisitorCountry();
-  const currency = currencyForCountry(country);
-  const inrPerUsd = currency === "USD" ? await getInrPerUsd() : FALLBACK_INR_PER_USD;
-  return { country, currency, inrPerUsd };
+  return resolvePricingForCountry(detectVisitorCountry());
 }
