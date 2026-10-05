@@ -5,6 +5,7 @@ import { PublicLayout } from "@/components/layout/PublicLayout";
 import { getProduct } from "@/lib/marketplace.functions";
 import { acquireProduct, getMyProducts } from "@/lib/account.functions";
 import { createOxaPayPayment } from "@/lib/oxapay.functions";
+import { useLocalPrice } from "@/lib/pricing.functions";
 import { useGetSession } from "@/lib/use-session";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -41,6 +42,7 @@ function ProductDetail() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const localPrice = useLocalPrice();
 
   const { data: session } = useGetSession();
   const isAuthenticated = session?.authenticated;
@@ -118,7 +120,7 @@ function ProductDetail() {
   const ctaText = salesPage?.ctaLabel || "Get instant access";
   const priceLabel = isFree
     ? "Free"
-    : new Intl.NumberFormat("en-IN", { style: "currency", currency: product.currency || "INR", maximumFractionDigits: 2 }).format((product.price_minor || 0) / 100);
+    : localPrice(product.price_minor);
   const accessLabel = (product.trial_days || 0) > 0
     ? `${product.trial_days}-day free trial`
     : product.access_plan === "fixed_days"

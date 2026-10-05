@@ -32,14 +32,19 @@ export const createOxaPayPayment = createServerFn({ method: "POST" })
     if ((product.price_minor ?? 0) <= 0) throw new Error("This product is free");
 
     const origin = new URL(getRequest().url).origin;
-    const amountInr = product.price_minor / 100;
+
+    // Visitors in India pay in INR; everyone else (by IP country) pays in USD.
+    const { resolveVisitorPricing } = await import("./pricing.server");
+    const { localizeInrPrice } = await import("./pricing");
+    const pricing = await resolveVisitorPricing();
+    const charge = localizeInrPrice(product.price_minor, pricing);
 
     const res = await fetch("https://api.oxapay.com/v1/payment/invoice", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        amount: amountInr,
-        currency: "INR",
+        amount: charge.minor / 100,
+        currency: charge.currency,
         lifeTime: 60,
         feePaidByPayer: 1,
         underPaidCoverage: 0,

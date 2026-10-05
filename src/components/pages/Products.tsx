@@ -3,11 +3,8 @@ import { FileBox, Package } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { listProducts } from "@/lib/marketplace.functions";
 import { PublicLayout } from "@/components/layout/PublicLayout";
+import { useLocalPrice } from "@/lib/pricing.functions";
 
-function productPrice(priceMinor: number, currency: string) {
-  if (priceMinor === 0) return "Free";
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: currency || "INR", maximumFractionDigits: 2 }).format(priceMinor / 100);
-}
 function accessLabel(product: { access_plan: string; access_days?: number | null; trial_days: number }) {
   if (product.trial_days > 0) return `${product.trial_days}-day free trial`;
   if (product.access_plan === "fixed_days") return `${product.access_days} days access`;
@@ -17,6 +14,7 @@ function accessLabel(product: { access_plan: string; access_days?: number | null
 }
 
 export default function Products() {
+  const productPrice = useLocalPrice();
   const { data: products, isLoading, isError } = useQuery({
     queryKey: ["products"],
     queryFn: () => listProducts({ data: {} }),
