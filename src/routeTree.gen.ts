@@ -26,6 +26,7 @@ import { Route as CoursesIndexRouteImport } from './routes/courses/index'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses/$courseId'
 import { Route as CreatorsIndexRouteImport } from './routes/creators/index'
 import { Route as CreatorsUsernameRouteImport } from './routes/creators/$username'
+import { Route as PaymentSuccessRouteImport } from './routes/payment/success'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products/$productId'
 import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated/dashboard/admin'
@@ -117,6 +118,11 @@ const CreatorsUsernameRoute = CreatorsUsernameRouteImport.update({
   path: '/creators/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
+  id: '/payment/success',
+  path: '/payment/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsIndexRoute = ProductsIndexRouteImport.update({
   id: '/products/',
   path: '/products/',
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/auth/sign-up': typeof AuthSignUpRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/creators/$username': typeof CreatorsUsernameRoute
+  '/payment/success': typeof PaymentSuccessRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/courses/': typeof CoursesIndexRoute
   '/creators/': typeof CreatorsIndexRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/auth/sign-up': typeof AuthSignUpRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/creators/$username': typeof CreatorsUsernameRoute
+  '/payment/success': typeof PaymentSuccessRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/courses': typeof CoursesIndexRoute
   '/creators': typeof CreatorsIndexRoute
@@ -216,6 +224,7 @@ export interface FileRoutesById {
   '/auth/sign-up': typeof AuthSignUpRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/creators/$username': typeof CreatorsUsernameRoute
+  '/payment/success': typeof PaymentSuccessRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/courses/': typeof CoursesIndexRoute
   '/creators/': typeof CreatorsIndexRoute
@@ -242,6 +251,7 @@ export interface FileRouteTypes {
     | '/auth/sign-up'
     | '/courses/$courseId'
     | '/creators/$username'
+    | '/payment/success'
     | '/products/$productId'
     | '/courses/'
     | '/creators/'
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/auth/sign-up'
     | '/courses/$courseId'
     | '/creators/$username'
+    | '/payment/success'
     | '/products/$productId'
     | '/courses'
     | '/creators'
@@ -291,6 +302,7 @@ export interface FileRouteTypes {
     | '/auth/sign-up'
     | '/courses/$courseId'
     | '/creators/$username'
+    | '/payment/success'
     | '/products/$productId'
     | '/courses/'
     | '/creators/'
@@ -315,6 +327,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   CreatorsUsernameRoute: typeof CreatorsUsernameRoute
+  PaymentSuccessRoute: typeof PaymentSuccessRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
   CoursesIndexRoute: typeof CoursesIndexRoute
   CreatorsIndexRoute: typeof CreatorsIndexRoute
@@ -443,6 +456,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CreatorsUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/payment/success': {
+      id: '/payment/success'
+      path: '/payment/success'
+      fullPath: '/payment/success'
+      preLoaderRoute: typeof PaymentSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products/': {
       id: '/products/'
       path: '/products'
@@ -529,6 +549,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
   CreatorsUsernameRoute: CreatorsUsernameRoute,
+  PaymentSuccessRoute: PaymentSuccessRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
   CoursesIndexRoute: CoursesIndexRoute,
   CreatorsIndexRoute: CreatorsIndexRoute,

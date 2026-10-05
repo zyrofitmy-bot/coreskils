@@ -4,6 +4,7 @@ import { queryOptions, useSuspenseQuery, useQuery, useMutation, useQueryClient }
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { getProduct } from "@/lib/marketplace.functions";
 import { acquireProduct, getMyProducts } from "@/lib/account.functions";
+import { createOxaPayPayment } from "@/lib/oxapay.functions";
 import { useGetSession } from "@/lib/use-session";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -86,8 +87,19 @@ function ProductDetail() {
   };
 
   const handleCheckout = async () => {
-    // TODO(phase2): Implement ZapUPI checkout server function
-    setGuestError("Checkout is not yet implemented.");
+    setGuestError("");
+    if (!guestEmail || !/^\S+@\S+\.\S+$/.test(guestEmail)) {
+      setGuestError("Please enter a valid email address — your product access is linked to it.");
+      return;
+    }
+    setCheckoutPending(true);
+    try {
+      const result = await createOxaPayPayment({ data: { productId, email: guestEmail } });
+      window.location.href = result.payLink;
+    } catch (error) {
+      setGuestError(error instanceof Error ? error.message : "Could not start payment. Please try again.");
+      setCheckoutPending(false);
+    }
   };
 
   if (!product) {
@@ -169,7 +181,7 @@ function ProductDetail() {
         >
           {isFree
             ? (guestPending ? "Preparing access..." : ctaText)
-            : (checkoutPending ? "Opening secure payment..." : `Pay ${priceLabel} with UPI`)}
+            : (checkoutPending ? "Opening secure payment..." : `Pay ${priceLabel} with Crypto`)}
         </Button>
         {!isFree && (product.trial_days || 0) > 0 && (
           <Button
@@ -182,7 +194,7 @@ function ProductDetail() {
           </Button>
         )}
         <p className="text-center text-xs leading-5 text-[#737373]">
-          {isFree ? "No account required." : "Verified secure payment by ZapUPI."} By continuing, you agree to the Terms and Privacy Policy.
+          {isFree ? "No account required." : "Secure crypto payment by OxaPay (USDT, BTC, ETH & more)."} By continuing, you agree to the Terms and Privacy Policy.
         </p>
       </div>
     );
