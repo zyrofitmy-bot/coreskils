@@ -17,9 +17,9 @@ export const getVisitorPricing = createServerFn({ method: "GET" }).handler(
 );
 
 export const visitorPricingQuery = queryOptions({
-  queryKey: ["visitor-pricing-v2"],
+  queryKey: ["visitor-pricing-v3"],
   queryFn: () => getVisitorPricing(),
-  staleTime: Infinity,
+  staleTime: 60 * 60 * 1000,
 });
 
 export function useVisitorPricing() {
