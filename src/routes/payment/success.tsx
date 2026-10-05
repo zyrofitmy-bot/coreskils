@@ -45,12 +45,20 @@ function PaymentSuccess() {
               {data?.productTitle
                 ? `Your payment for "${data.productTitle}" is confirmed.`
                 : "Your payment is confirmed."}{" "}
-              Sign in (or create an account) with the same email you used at checkout to access your product in My Library.
+              {data && "downloadUrl" in data && data.downloadUrl
+                ? "Download your e-book below. The link stays valid for 24 hours — you can also open this page again later."
+                : "Sign in (or create an account) with the same email you used at checkout to access your product in My Library."}
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button asChild className="h-12 rounded-lg bg-primary px-8 font-semibold text-white hover:bg-[#10A364]">
-                <Link to="/auth/login">Sign in to access</Link>
-              </Button>
+              {data && "downloadUrl" in data && data.downloadUrl ? (
+                <Button asChild className="h-12 rounded-lg bg-primary px-8 font-semibold text-white hover:bg-[#10A364]">
+                  <a href={data.downloadUrl} target="_blank" rel="noopener noreferrer">Download your e-book (PDF)</a>
+                </Button>
+              ) : (
+                <Button asChild className="h-12 rounded-lg bg-primary px-8 font-semibold text-white hover:bg-[#10A364]">
+                  <Link to="/auth/login">Sign in to access</Link>
+                </Button>
+              )}
               {data?.productSlug && (
                 <Button asChild variant="outline" className="h-12 rounded-lg px-8 font-semibold">
                   <Link to="/products/$productId" params={{ productId: data.productSlug }}>
