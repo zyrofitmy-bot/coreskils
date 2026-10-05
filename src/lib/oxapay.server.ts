@@ -1,7 +1,7 @@
 // Server-only OxaPay helpers. Payment records are written with the privileged
 // backend client, so these run only where that backend access is configured
 // (the Lovable deployment). Other hosts (e.g. Vercel) proxy to it.
-import { localizeInrPrice, type VisitorPricing } from "./pricing";
+import { chargePrice, type VisitorPricing } from "./pricing";
 
 export const PAYMENT_BACKEND_URL = "https://coreskils.lovable.app";
 
@@ -37,7 +37,7 @@ export function safeReturnOrigin(candidate: string | undefined, fallback: string
 export async function createPaymentCore(input: {
   productId: string;
   email: string;
-  pricing: Pick<VisitorPricing, "currency" | "inrPerUsd">;
+  pricing: Pick<VisitorPricing, "currency" | "rates">;
   callbackOrigin: string;
   returnOrigin: string;
 }) {
@@ -54,7 +54,7 @@ export async function createPaymentCore(input: {
   if (!product) throw new Error("Product not found");
   if ((product.price_minor ?? 0) <= 0) throw new Error("This product is free");
 
-  const charge = localizeInrPrice(product.price_minor, input.pricing);
+  const charge = chargePrice(product.price_minor, product.currency || "INR", input.pricing);
 
   const res = await fetch("https://api.oxapay.com/v1/payment/invoice", {
     method: "POST",
@@ -85,8 +85,8 @@ export async function createPaymentCore(input: {
     track_id: String(trackId),
     product_id: product.id,
     email: input.email.toLowerCase(),
-    amount_minor: product.price_minor,
-    currency: product.currency || "INR",
+    amount_minor: charge.minor,
+    currency: charge.currency,
     status: "waiting",
     pay_link: payLink,
   });

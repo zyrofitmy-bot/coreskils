@@ -19,15 +19,13 @@ export const Route = createFileRoute("/api/public/oxapay-create")({
         if (!parsed.success) return Response.json({ error: "Invalid request" }, { status: 400 });
         try {
           const { createPaymentCore, safeReturnOrigin } = await import("@/lib/oxapay.server");
-          const { getInrPerUsd } = await import("@/lib/pricing.server");
-          const { currencyForCountry } = await import("@/lib/pricing");
-          const currency = currencyForCountry(parsed.data.country);
-          const inrPerUsd = currency === "USD" ? await getInrPerUsd() : 84;
+          const { resolvePricingForCountry } = await import("@/lib/pricing.server");
+          const pricing = await resolvePricingForCountry(parsed.data.country ?? null);
           const origin = new URL(request.url).origin;
           const result = await createPaymentCore({
             productId: parsed.data.productId,
             email: parsed.data.email,
-            pricing: { currency, inrPerUsd },
+            pricing,
             callbackOrigin: origin,
             returnOrigin: safeReturnOrigin(parsed.data.returnOrigin, origin),
           });

@@ -120,7 +120,7 @@ function ProductDetail() {
   const ctaText = salesPage?.ctaLabel || "Get instant access";
   const priceLabel = isFree
     ? "Free"
-    : localPrice(product.price_minor);
+    : localPrice(product.price_minor, product.currency);
   const accessLabel = (product.trial_days || 0) > 0
     ? `${product.trial_days}-day free trial`
     : product.access_plan === "fixed_days"
