@@ -446,6 +446,53 @@ export type Database = {
         }
         Relationships: []
       }
+      oxapay_payments: {
+        Row: {
+          amount_minor: number
+          created_at: string
+          currency: string
+          email: string
+          id: string
+          paid_at: string | null
+          pay_link: string | null
+          product_id: string
+          status: string
+          track_id: string
+        }
+        Insert: {
+          amount_minor: number
+          created_at?: string
+          currency?: string
+          email: string
+          id?: string
+          paid_at?: string | null
+          pay_link?: string | null
+          product_id: string
+          status?: string
+          track_id: string
+        }
+        Update: {
+          amount_minor?: number
+          created_at?: string
+          currency?: string
+          email?: string
+          id?: string
+          paid_at?: string | null
+          pay_link?: string | null
+          product_id?: string
+          status?: string
+          track_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oxapay_payments_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_settings: {
         Row: {
           key: string
