@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { Package } from "lucide-react";
-import { formatPrice } from "@/lib/format";
+import { useLocalPrice } from "@/lib/pricing.functions";
 
 export function ProductCard({ product }: { product: any }) {
+  const formatPrice = useLocalPrice();
   return (
     <Link
       to="/products/$productId"
