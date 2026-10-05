@@ -33,6 +33,8 @@ import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authe
 import { Route as AuthenticatedDashboardCreatorRouteImport } from './routes/_authenticated/dashboard/creator'
 import { Route as AuthenticatedDashboardStudentRouteImport } from './routes/_authenticated/dashboard/student'
 import { Route as ApiPublicOxapayCallbackRouteImport } from './routes/api/public/oxapay-callback'
+import { Route as ApiPublicOxapayCreateRouteImport } from './routes/api/public/oxapay-create'
+import { Route as ApiPublicOxapayStatusRouteImport } from './routes/api/public/oxapay-status'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -156,6 +158,16 @@ const ApiPublicOxapayCallbackRoute = ApiPublicOxapayCallbackRouteImport.update({
   path: '/api/public/oxapay-callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicOxapayCreateRoute = ApiPublicOxapayCreateRouteImport.update({
+  id: '/api/public/oxapay-create',
+  path: '/api/public/oxapay-create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicOxapayStatusRoute = ApiPublicOxapayStatusRouteImport.update({
+  id: '/api/public/oxapay-status',
+  path: '/api/public/oxapay-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -181,6 +193,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/creator': typeof AuthenticatedDashboardCreatorRoute
   '/dashboard/student': typeof AuthenticatedDashboardStudentRoute
   '/api/public/oxapay-callback': typeof ApiPublicOxapayCallbackRoute
+  '/api/public/oxapay-create': typeof ApiPublicOxapayCreateRoute
+  '/api/public/oxapay-status': typeof ApiPublicOxapayStatusRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -206,6 +220,8 @@ export interface FileRoutesByTo {
   '/dashboard/creator': typeof AuthenticatedDashboardCreatorRoute
   '/dashboard/student': typeof AuthenticatedDashboardStudentRoute
   '/api/public/oxapay-callback': typeof ApiPublicOxapayCallbackRoute
+  '/api/public/oxapay-create': typeof ApiPublicOxapayCreateRoute
+  '/api/public/oxapay-status': typeof ApiPublicOxapayStatusRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -233,6 +249,8 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/creator': typeof AuthenticatedDashboardCreatorRoute
   '/_authenticated/dashboard/student': typeof AuthenticatedDashboardStudentRoute
   '/api/public/oxapay-callback': typeof ApiPublicOxapayCallbackRoute
+  '/api/public/oxapay-create': typeof ApiPublicOxapayCreateRoute
+  '/api/public/oxapay-status': typeof ApiPublicOxapayStatusRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -260,6 +278,8 @@ export interface FileRouteTypes {
     | '/dashboard/creator'
     | '/dashboard/student'
     | '/api/public/oxapay-callback'
+    | '/api/public/oxapay-create'
+    | '/api/public/oxapay-status'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -285,6 +305,8 @@ export interface FileRouteTypes {
     | '/dashboard/creator'
     | '/dashboard/student'
     | '/api/public/oxapay-callback'
+    | '/api/public/oxapay-create'
+    | '/api/public/oxapay-status'
   id:
     | '__root__'
     | '/'
@@ -311,6 +333,8 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/creator'
     | '/_authenticated/dashboard/student'
     | '/api/public/oxapay-callback'
+    | '/api/public/oxapay-create'
+    | '/api/public/oxapay-status'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -333,6 +357,8 @@ export interface RootRouteChildren {
   CreatorsIndexRoute: typeof CreatorsIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
   ApiPublicOxapayCallbackRoute: typeof ApiPublicOxapayCallbackRoute
+  ApiPublicOxapayCreateRoute: typeof ApiPublicOxapayCreateRoute
+  ApiPublicOxapayStatusRoute: typeof ApiPublicOxapayStatusRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -505,6 +531,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicOxapayCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/oxapay-create': {
+      id: '/api/public/oxapay-create'
+      path: '/api/public/oxapay-create'
+      fullPath: '/api/public/oxapay-create'
+      preLoaderRoute: typeof ApiPublicOxapayCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/oxapay-status': {
+      id: '/api/public/oxapay-status'
+      path: '/api/public/oxapay-status'
+      fullPath: '/api/public/oxapay-status'
+      preLoaderRoute: typeof ApiPublicOxapayStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -555,6 +595,8 @@ const rootRouteChildren: RootRouteChildren = {
   CreatorsIndexRoute: CreatorsIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
   ApiPublicOxapayCallbackRoute: ApiPublicOxapayCallbackRoute,
+  ApiPublicOxapayCreateRoute: ApiPublicOxapayCreateRoute,
+  ApiPublicOxapayStatusRoute: ApiPublicOxapayStatusRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -5,7 +5,8 @@ import { z } from "zod";
 /**
  * Creates an OxaPay invoice for a digital product and returns the pay link.
  * Works for guests (email only) — entitlement is granted by the callback
- * webhook once OxaPay confirms payment.
+ * webhook once OxaPay confirms payment. Hosts without privileged backend
+ * access (e.g. Vercel) forward the request to the Lovable deployment.
  */
 export const createOxaPayPayment = createServerFn({ method: "POST" })
   .inputValidator((d) =>
@@ -17,80 +18,56 @@ export const createOxaPayPayment = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    const merchantKey = process.env["OXAPAY_MERCHANT_API_KEY"];
-    if (!merchantKey) throw new Error("Payment gateway is not configured");
-
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const { data: product } = await supabaseAdmin
-      .from("products")
-      .select("id, title, price_minor, currency, status")
-      .eq("id", data.productId)
-      .eq("status", "published")
-      .single();
-    if (!product) throw new Error("Product not found");
-    if ((product.price_minor ?? 0) <= 0) throw new Error("This product is free");
-
+    const { createPaymentCore, hasPrivilegedBackend, PAYMENT_BACKEND_URL } = await import(
+      "./oxapay.server"
+    );
+    const { resolveVisitorPricing, detectVisitorCountry } = await import("./pricing.server");
     const origin = new URL(getRequest().url).origin;
 
-    // Visitors in India pay in INR; everyone else (by IP country) pays in USD.
-    const { resolveVisitorPricing } = await import("./pricing.server");
-    const { localizeInrPrice } = await import("./pricing");
-    const pricing = await resolveVisitorPricing();
-    const charge = localizeInrPrice(product.price_minor, pricing);
+    if (hasPrivilegedBackend()) {
+      const pricing = await resolveVisitorPricing();
+      return createPaymentCore({
+        productId: data.productId,
+        email: data.email,
+        pricing,
+        callbackOrigin: origin,
+        returnOrigin: origin,
+      });
+    }
 
-    const res = await fetch("https://api.oxapay.com/v1/payment/invoice", {
+    const res = await fetch(`${PAYMENT_BACKEND_URL}/api/public/oxapay-create`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        amount: charge.minor / 100,
-        currency: charge.currency,
-        lifeTime: 60,
-        feePaidByPayer: 1,
-        underPaidCoverage: 0,
-        description: `CoreSkils: ${product.title}`,
-        callbackUrl: `${origin}/api/public/oxapay-callback`,
-        returnUrl: `${origin}/payment/success`,
-        orderId: product.id,
+        productId: data.productId,
         email: data.email,
+        country: detectVisitorCountry(),
+        returnOrigin: origin,
       }),
     });
-
     const payload = (await res.json().catch(() => null)) as any;
-    if (!res.ok || !payload || payload.result !== 100 || !payload.payLink) {
-      console.error("OxaPay invoice failed", payload);
-      throw new Error(payload?.message || "Could not create payment. Please try again.");
+    if (!res.ok || !payload?.payLink) {
+      throw new Error(payload?.error || "Could not create payment. Please try again.");
     }
-
-    const { error } = await supabaseAdmin.from("oxapay_payments").insert({
-      track_id: String(payload.trackId),
-      product_id: product.id,
-      email: data.email.toLowerCase(),
-      amount_minor: product.price_minor,
-      currency: product.currency || "INR",
-      status: "waiting",
-      pay_link: payload.payLink,
-    });
-    if (error) throw new Error(error.message);
-
-    return { payLink: payload.payLink as string, trackId: String(payload.trackId) };
+    return { payLink: String(payload.payLink), trackId: String(payload.trackId) };
   });
 
 /** Lets the success page check whether a payment has been confirmed. */
 export const getOxaPayPaymentStatus = createServerFn({ method: "GET" })
-  .inputValidator((d) => z.object({ trackId: z.string() }).parse(d))
+  .inputValidator((d) => z.object({ trackId: z.string().max(100) }).parse(d))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: payment } = await supabaseAdmin
-      .from("oxapay_payments")
-      .select("status, product_id, products(title, slug)")
-      .eq("track_id", data.trackId)
-      .maybeSingle();
-    if (!payment) return { status: "unknown" as const };
+    const { getPaymentStatusCore, hasPrivilegedBackend, PAYMENT_BACKEND_URL } = await import(
+      "./oxapay.server"
+    );
+    if (hasPrivilegedBackend()) return getPaymentStatusCore(data.trackId);
+    const res = await fetch(
+      `${PAYMENT_BACKEND_URL}/api/public/oxapay-status?trackId=${encodeURIComponent(data.trackId)}`,
+    );
+    const payload = (await res.json().catch(() => null)) as any;
     return {
-      status: payment.status as string,
-      productId: payment.product_id as string,
-      productTitle: (payment as any).products?.title ?? null,
-      productSlug: (payment as any).products?.slug ?? null,
+      status: String(payload?.status ?? "unknown"),
+      productId: payload?.productId ?? null,
+      productTitle: payload?.productTitle ?? null,
+      productSlug: payload?.productSlug ?? null,
     };
   });
