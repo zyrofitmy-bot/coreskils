@@ -16,17 +16,11 @@ import {
 } from "lucide-react";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { listCourses, listProducts } from "@/lib/marketplace.functions";
+import { useLocalPrice } from "@/lib/pricing.functions";
 
-function productPrice(priceMinor: number, currency: string) {
-  if (priceMinor === 0) return "Free";
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: currency || "INR",
-    maximumFractionDigits: 0,
-  }).format(priceMinor / 100);
-}
 
 function ProductCard({ product }: { product: any }) {
+  const productPrice = useLocalPrice();
   return (
     <Link
       to="/products/$productId"
@@ -80,6 +74,7 @@ function ProductCard({ product }: { product: any }) {
 }
 
 export default function Home() {
+  const productPrice = useLocalPrice();
   const { data: products } = useQuery({
     queryKey: ["home-products"],
     queryFn: () => listProducts({ data: {} }),
