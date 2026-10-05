@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/payment/success")({
   validateSearch: (search: Record<string, unknown>) => ({
-    trackId: typeof search.trackId === "string" ? search.trackId : "",
+    trackId: typeof search["trackId"] === "string" ? search["trackId"] : "",
   }),
   head: () => ({
     meta: [
