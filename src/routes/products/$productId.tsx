@@ -5,7 +5,7 @@ import { PublicLayout } from "@/components/layout/PublicLayout";
 import { getProduct } from "@/lib/marketplace.functions";
 import { acquireProduct, getMyProducts } from "@/lib/account.functions";
 import { createOxaPayPayment } from "@/lib/oxapay.functions";
-import { useLocalPrice } from "@/lib/pricing.functions";
+import { useLocalHint, useLocalPrice } from "@/lib/pricing.functions";
 import { useGetSession } from "@/lib/use-session";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -43,6 +43,7 @@ function ProductDetail() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const localPrice = useLocalPrice();
+  const localHint = useLocalHint();
 
   const { data: session } = useGetSession();
   const isAuthenticated = session?.authenticated;
@@ -284,7 +285,7 @@ function ProductDetail() {
                   <div className="bg-white rounded-2xl border border-[#E5E5E5] shadow-[0_20px_40px_rgba(0,0,0,0.04)] overflow-hidden">
                     <div className="p-6 sm:p-8 sm:pb-6 border-b border-[#E5E5E5]">
                       <div className="flex items-center justify-between mb-6">
-                        <span className="text-[32px] sm:text-[40px] font-bold text-black leading-none">{priceLabel}</span>
+                        <span className="flex flex-col"><span className="text-[32px] sm:text-[40px] font-bold text-black leading-none">{priceLabel}</span>{!isFree && localHint(product.price_minor, product.currency) && <span className="mt-1 text-[13px] text-[#737373]">{localHint(product.price_minor, product.currency)} in your currency</span>}</span>
                         <span className="bg-[#E3F9EF] text-[#10A364] px-3 py-1 rounded-full text-[12px] sm:text-[13px] font-bold">
                           {isFree ? "Instant digital access" : "Secure payment required"}
                         </span>
