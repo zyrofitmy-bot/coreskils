@@ -214,7 +214,7 @@ function ProductDetail() {
             <div className="grid lg:grid-cols-12 gap-8 lg:gap-20 items-center">
               
               <div className="order-1 lg:order-2 lg:col-span-5 relative w-full max-w-lg mx-auto lg:max-w-none">
-                <div className="group flex aspect-[4/3] items-center justify-center overflow-hidden rounded-[2rem] border border-[#D9E7E0] bg-[#FAFAFA] p-0 shadow-[0_24px_70px_rgba(20,72,51,0.13)] lg:aspect-square relative">
+                <div className="group flex aspect-video items-center justify-center overflow-hidden rounded-[2rem] border border-[#D9E7E0] bg-[#FAFAFA] p-0 shadow-[0_24px_70px_rgba(20,72,51,0.13)] relative">
                   {product.cover_image_url ? (
                     <>
                       <img src={product.cover_image_url} alt="" className="absolute inset-0 h-full w-full object-cover opacity-20 blur-xl scale-110 pointer-events-none" aria-hidden="true" />

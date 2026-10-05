@@ -27,7 +27,7 @@ function ProductCard({ product }: { product: any }) {
       params={{ productId: product.public_slug || product.id }}
       className="group overflow-hidden rounded-2xl border border-[#DCE8E1] bg-white shadow-[0_14px_42px_rgba(20,80,55,.08)] transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1.5"
     >
-      <div className="aspect-[4/3] overflow-hidden bg-[#FAFAFA] relative">
+      <div className="aspect-video overflow-hidden bg-[#FAFAFA] relative">
         {product.cover_image_url ? (
           <>
             <img
@@ -174,7 +174,7 @@ export default function Home() {
                           <img
                             src={heroProduct.cover_image_url}
                             alt={heroProduct.title}
-                            className="w-full aspect-[16/10] object-contain"
+                            className="w-full aspect-video object-contain"
                             fetchPriority="high"
                           />
                         )}
