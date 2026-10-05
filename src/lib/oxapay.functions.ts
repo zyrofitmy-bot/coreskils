@@ -69,5 +69,6 @@ export const getOxaPayPaymentStatus = createServerFn({ method: "GET" })
       productId: payload?.productId ?? null,
       productTitle: payload?.productTitle ?? null,
       productSlug: payload?.productSlug ?? null,
+      downloadUrl: (payload?.downloadUrl ?? null) as string | null,
     };
   });

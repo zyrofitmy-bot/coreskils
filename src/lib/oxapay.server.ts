@@ -103,10 +103,20 @@ export async function getPaymentStatusCore(trackId: string) {
     .eq("track_id", trackId)
     .maybeSingle();
   if (!payment) return { status: "unknown" as string };
+  const productSlug = ((payment as any).products?.public_slug ?? null) as string | null;
+  let downloadUrl: string | null = null;
+  // Only paid orders get a short-lived private download link for the e-book file.
+  if (payment.status === "paid" && productSlug) {
+    const { data: signed } = await supabaseAdmin.storage
+      .from("ebooks")
+      .createSignedUrl(`${productSlug}.pdf`, 60 * 60 * 24, { download: `${productSlug}.pdf` });
+    downloadUrl = signed?.signedUrl ?? null;
+  }
   return {
     status: payment.status as string,
     productId: payment.product_id as string,
     productTitle: ((payment as any).products?.title ?? null) as string | null,
-    productSlug: ((payment as any).products?.public_slug ?? null) as string | null,
+    productSlug,
+    downloadUrl,
   };
 }
